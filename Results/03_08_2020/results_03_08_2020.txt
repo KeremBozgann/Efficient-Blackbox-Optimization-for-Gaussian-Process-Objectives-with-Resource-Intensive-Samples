@@ -1,0 +1,40 @@
+iter:20, budget=5, kernel= rbf, ls= 0.5, var= 1.0
+loss_ei:0.0014996568605412403, loss_pi:1.2547468250581573, loss_ucb:0.07198581575375873, loss_rand:0.39498610842150905, loss_tsdtr:0.03366079818646928, loss_tsdtr_with_discard:0.001263368947841721
+
+iter:100, budget=5, kernel= rbf, ls= 0.5, var= 1.0
+loss_ei:0.0015787423927481601,
+ loss_pi:1.3008042051041377,
+ loss_ucb:0.24089081248278424,
+ loss_rand:0.33806252659412206,
+ loss_tsdtr:0.0479871871030447,
+ loss_tsdtr_with_discard:0.0019176774696269328
+
+iter=100, budget=5 , kernel= rbf, ls= 1.0, var= 1.0
+loss_ei:0.002743119603052186,
+loss_pi:0.22110608912734941,
+loss_ucb:0.02100806366665255,
+loss_rand:0.025628283216202592,
+loss_tsdtr:0.0441943616935443,
+loss_tsdtr_with_discard:0.01588458899368647
+
+iter=100, budget=5 , ls= 0.5; var= 1.0;
+loss_ei:0.03449327448790214
+ loss_pi:1.2547519264732725
+ loss_ucb:0.23836572967902214
+ loss_rand:0.419600141501795
+ loss_tsdtr:0.0403805423176832
+ loss_tsdtr_with_discard:0.0027719717569368602
+ loss_ei_weighted_tsdtr_with_discard:0.005280062132432095
+loss_ei_factored_tsdtr_with_discard:0.004882496488578279
+ loss_pi_factored_tsdtr_with_discard:0.004882496488578279
+
+ iter=100, budget=5,  ls= 0.5; var= 1.0;
+loss_ei:0.01782095183107597
+ loss_pi:1.3124096870151924
+ loss_ucb:0.15924216511497813
+ loss_rand:0.42191527468488
+ loss_tsdtr:0.06484162882220323
+ loss_tsdtr_with_discard:0.001744079218801884
+ loss_ei_weighted_tsdtr_with_discard:0.004871912966974527
+loss_ei_factored_tsdtr_with_discard:0.005177375986323847
+ loss_pi_factored_tsdtr_with_discard:0.005177375986323847

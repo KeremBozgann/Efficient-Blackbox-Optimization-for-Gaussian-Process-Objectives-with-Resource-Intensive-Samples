@@ -1,0 +1,17 @@
+
+def one_step_mean_and_variance(x2, u0_x2, var0_x2, kernel, x1, Z, Xt, noise):
+
+    if type(Z) != np.ndarray:
+        Z = np.atleast_2d(Z)
+
+    k0_x2_x1= posterior_covariance(x2, x1, Xt, kernel,  noise)
+    k0_x1_x1= posterior_covariance(x1, x1, Xt, kernel, noise)
+    L0_x1= np.linalg.cholesky(k0_x1_x1)
+    sigma0= np.matmul(k0_x2_x1, np.linalg.inv(L0_x1))
+
+    u1_x2= u0_x2 + np.matmul(sigma0,Z)
+
+    var1_x2= var0_x2- np.matmul(sigma0, sigma0.T)
+
+
+    return u1_x2, var1_x2
