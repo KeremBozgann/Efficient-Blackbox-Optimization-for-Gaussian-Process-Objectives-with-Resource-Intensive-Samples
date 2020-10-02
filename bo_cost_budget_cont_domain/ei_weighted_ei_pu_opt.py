@@ -9,7 +9,7 @@ class eiw_eipu():
         pass
 
     def maximize_eiw_eipu(self, num_lthc_samples, domain, num_ei_samples, model, f_best, latent_cost_model,
-                          sampling_method):
+                          sampling_method, cut_below_avg):
 
         if sampling_method== 'lthc':
 
@@ -18,19 +18,29 @@ class eiw_eipu():
         elif sampling_method=='random':
             X_ei, ei_values= ei_sampling(num_lthc_samples, num_ei_samples, domain, model, f_best)
 
-        index_above = np.where(ei_values> np.mean(ei_values))[0]
-        ei_values_above = ei_values[index_above, :].reshape(-1, 1)
-        X_ei_above = X_ei[index_above, :]
+        if cut_below_avg:
+            index_above = np.where(ei_values> np.mean(ei_values))[0]
+            ei_values_above = ei_values[index_above, :].reshape(-1, 1)
+            X_ei_above = X_ei[index_above, :]
 
-        # u_cost_X_ei, _, _= get_mean_and_var_cost(X_ei, latent_cost_model)
-        u_cost_X_ei_above, _, _= get_mean_and_var_cost(X_ei_above, latent_cost_model)
-        # eipu_values= ei_values/u_cost_X_ei
-        eipu_values= ei_values_above/u_cost_X_ei_above
+            # u_cost_X_ei, _, _= get_mean_and_var_cost(X_ei, latent_cost_model)
+            u_cost_X_ei_above, _, _= get_mean_and_var_cost(X_ei_above, latent_cost_model)
+            # eipu_values= ei_values/u_cost_X_ei
+            eipu_values= ei_values_above/u_cost_X_ei_above
 
 
-        max_index= np.argmax(eipu_values, axis=0)
-        x_opt= X_ei_above[max_index, :].reshape(1,-1)
-        value_opt= eipu_values[max_index, :].reshape(1,-1)
+            max_index= np.argmax(eipu_values, axis=0)
+            x_opt= X_ei_above[max_index, :].reshape(1,-1)
+            value_opt= eipu_values[max_index, :].reshape(1,-1)
+
+        else:
+            u_cost_X_ei, _, _= get_mean_and_var_cost(X_ei, latent_cost_model)
+
+            eipu_values = ei_values / u_cost_X_ei
+
+            max_index = np.argmax(eipu_values, axis=0)
+            x_opt = X_ei[max_index, :].reshape(1, -1)
+            value_opt = eipu_values[max_index, :].reshape(1, -1)
 
         return x_opt, value_opt
 

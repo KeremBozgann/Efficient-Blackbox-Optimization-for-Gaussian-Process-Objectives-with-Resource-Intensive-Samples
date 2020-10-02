@@ -61,8 +61,9 @@ def multi_opt_1d_cost_find_best_suited_kernel(X, Y, noise=10**(-4)):
 
     D= X.shape[1]
     kernel = gp.kernels.RBF(lengthscales=np.array([1] * D))
+    Y_latent= np.log(Y)
 
-    model = gp.models.GPR((X, Y), kernel=kernel)
+    model = gp.models.GPR((X, Y_latent), kernel=kernel)
     '''set hyperparameter constraints'''
     model.kernel.lengthscales = gp.Parameter(model.kernel.lengthscales.numpy(), transform=logistic)
     model.kernel.variance = gp.Parameter(model.kernel.variance.numpy(), transform=logistic)

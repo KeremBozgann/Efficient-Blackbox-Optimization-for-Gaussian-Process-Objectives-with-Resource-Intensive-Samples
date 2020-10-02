@@ -47,7 +47,7 @@ def eiw_eipu_bo(D, objective_func, cost_function, y_true_opt, x_true_opt,
                  domain, kernel, budget, x0, latent_cost_kernel, random_restarts, num_iter_max, grid,
                          noise=10**(-4), noise_cost= 10**(-4), plot=False, plot_cost= False, num_layer= None, num_dense= None,
                          num_epoch= 1.7, X_init= None, Y_init= None, Y_cost_init= None, hyper_opt_per= False, plot_color= False,
-               num_lthc_samples= 1000, num_ei_samples=100, sampling_method= 'random'):
+               num_lthc_samples= 1000, num_ei_samples=100, sampling_method= 'random', cut_below_avg= False):
 
     '''constraint values'''
     lower= 10**(-3); upper= 10**(6); #lengtscale and variance constarint
@@ -199,7 +199,7 @@ def eiw_eipu_bo(D, objective_func, cost_function, y_true_opt, x_true_opt,
             opt= eiw_eipu()
 
             xt, xt_val= opt.maximize_eiw_eipu(num_lthc_samples, domain, num_ei_samples, model, f_best, latent_cost_model,
-                                              sampling_method)
+                                              sampling_method, cut_below_avg)
             # xt, xt_val = opt.maximize_imco(kernel, Xt, noise, model, domain, random_restarts, f_best,
             #            grid, D, num_iter_max, Yt, latent_cost_model, latent_cost_kernel, Yt_cost)
 
@@ -555,7 +555,8 @@ def test_branin_res():
                     noise= noise, noise_cost= noise_cost, plot=False, plot_cost=False, num_layer=None,
                     num_dense=None,
                     num_epoch=1.7, X_init=None, Y_init=None, Y_cost_init=None, hyper_opt_per=False, plot_color=False,
-                    num_lthc_samples=num_lthc_samples, num_ei_samples=num_ei_samples, sampling_method= 'random')
+                    num_lthc_samples=num_lthc_samples, num_ei_samples=num_ei_samples, sampling_method= 'random',
+                    cut_below_avg= False)
 
 
 sys.path.append('../HPO')

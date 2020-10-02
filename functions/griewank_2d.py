@@ -5,37 +5,60 @@ import matplotlib.pyplot as plt
 import math
 import gpflow as gp
 from gpflow.utilities import print_summary
-from scipy.optimize import minimize
-from scipy.optimize import Bounds
 import sys
 sys.path.append('../bo_cost_budget_cont_domain')
 from hyperparameter_optimization import logistic_bjt
 
+import sys
+from scipy.optimize import Bounds
+from scipy.optimize import minimize
 
-def multi_opt_2d(X):
+sys.path.append('../bo_cost_budget_cont_domain')
+from hyperparameter_optimization import logistic_bjt
 
-    x1= X[:,0].reshape(-1,1); x2= X[:,1].reshape(-1,1)
-    result = (np.sin(np.pi*x1)+ np.sin(np.pi*x2))+(np.sin(1.5*np.pi*x1)+ np.sin(1.5*np.pi*x2))+\
-             (np.sin(2*np.pi*x1)+ np.sin(2*np.pi*x2))
+def griewank_2d(X):
 
-    # result = float(result)
+    # x1= X[:,0].reshape(-1,1); x2= X[:,1].reshape(-1,1)
+    term1 = 0
+    term2 = 1
 
-    # print('Result = %f' % result)
-    # time.sleep(np.random.randint(60))
+    for i in range(2):
+        xi = X[:, i].reshape(-1, 1)
+        term1 += xi ** 2
+        term2 *= np.cos(xi / np.sqrt(i + 1))
+    result = term1 / 4000 - term2 + 1
+
     return result
 
+def griewank_2d_opt():
 
-def scipy_minimize_multi_opt_2d():
+    y_opt= 0.0
+    x_opt= [[0.0, 0.0]]
+    domain=  [[-5,5], [-5,5]]
+
+    return y_opt, x_opt, domain
+
+
+def scipy_minimize_griewank_2d():
 
     def fun(x):
         x= x.reshape(1,-1)
-        x1 = x[:, 0].reshape(-1, 1);
-        x2 = x[:, 1].reshape(-1, 1)
-        result = (np.sin(np.pi * x1) + np.sin(np.pi * x2)) + (np.sin(1.5 * np.pi * x1) + np.sin(1.5 * np.pi * x2)) + \
-                 (np.sin(2 * np.pi * x1) + np.sin(2 * np.pi * x2))
+
+        term1 = 0
+        term2 = 1
+
+        for i in range(2):
+
+            xi = x[:, i].reshape(-1, 1)
+            term1 += xi ** 2
+            term2 *= np.cos(xi / np.sqrt(i+1))
+        result = term1 / 4000 - term2 + 1
+        result= result.flatten()
+
         return result
 
-    domain = [[-3, 3], [-3, 3]]
+    domain= [[-5,5], [-5,5]]
+
     lower = [];upper = []
     D = 2
 
@@ -48,29 +71,20 @@ def scipy_minimize_multi_opt_2d():
 
     for i in range(100):
 
-
         x0 = np.random.uniform(lower, upper, (1, D))
         result= minimize(fun= fun, bounds= b, x0= x0, method= 'L-BFGS-B')
         # print('optimum point:{}, optimum value:{}'.format(result['x'], result['fun']))
         x_opt_list[i, :] = result['x'].reshape(1,-1)
         value_list[i, :]= result['fun'].reshape(1,-1)
     index= np.argmin(value_list, axis=0)
-    print('optimum point:{}, optimum value:{}'.format(value_list[index, :].reshape(-1,1), x_opt_list[index , :].reshape(1,-1)))
+    print('optimum value:{}, optimum point:{}'.format(value_list[index, :].reshape(-1,1), x_opt_list[index , :].reshape(1,-1)))
+
+
+def griewank_2d_plots(disc, plot= False):
 
 
 
-def multi_opt_2d_opt():
-
-    y_opt= -5.50164952
-    x_opt= [-0.30955124, -0.30955124]
-    domain= [[-3,3], [-3,3]]
-
-    return y_opt, x_opt, domain
-
-def multi_opt_2d_plots(disc, plot= False):
-
-    domain= [[-3,3], [-3,3]]
-
+    domain= [[-5,5], [-5,5]]
     x1 = np.linspace(domain[0][0], domain[0][1], disc)
     x2 = np.linspace(domain[1][0], domain[1][1], disc)
     x1_max, x2_max, x1_min, x2_min = np.max(x1), np.max(x2), np.min(x1), np.min(x2)
@@ -80,7 +94,7 @@ def multi_opt_2d_plots(disc, plot= False):
     X1_flat, X2_flat = X1_flat.reshape(-1, 1), X2_flat.reshape(-1, 1)
     X = np.append(X1_flat, X2_flat, axis=1)
 
-    Y= multi_opt_2d(X)
+    Y= griewank_2d(X)
 
     if plot:
         fig = plt.figure()
@@ -90,7 +104,7 @@ def multi_opt_2d_plots(disc, plot= False):
         plt.show()
     return X, Y
 
-def multi_opt_2d_find_best_suited_kernel(X, Y, noise=10**(-4)):
+def griewank_2d_find_best_suited_kernel(X, Y, noise=10**(-4)):
 
     '''constraint values'''
     lower= 10**(-5); upper= 10**(6); #lengtscale and variance constarint
@@ -116,6 +130,5 @@ def multi_opt_2d_find_best_suited_kernel(X, Y, noise=10**(-4)):
 
     opt_logs = opt.minimize(model.training_loss, model.trainable_variables, options=dict(maxiter=100))
     print_summary(model)
-
 
     return model, kernel

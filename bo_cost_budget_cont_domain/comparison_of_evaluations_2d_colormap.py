@@ -18,7 +18,7 @@ from synthetic_2d import *
 from synthetic_2d_multi2 import *
 from synthetic_2d_multi_opt import *
 from synthetic_2parts import *
-from branin_res import *
+from griewank import *
 
 '''costs'''
 from multi_opt_different_cost_1d_cost import *
@@ -33,14 +33,14 @@ D = 2
 noise = 10 ** (-3);
 noise_cost = 10 ** (-3);
 
-objective_func = multi_opt_2d;
-y_true_opt, x_true_opt, domain = multi_opt_2d_opt()
-X_kern, Y_kern = multi_opt_2d_plots(disc, plot=False)
-model, kernel = multi_opt_2d_find_best_suited_kernel(X_kern, Y_kern, noise=noise)
+objective_func = branin_res;
+y_true_opt, x_true_opt, domain = branin_res_opt()
+X_kern, Y_kern = branin_res_plots(disc, plot=False)
+model, kernel =branin_res_find_best_suited_kernel(X_kern, Y_kern, noise=noise)
 
-X_cost_kern, Y_cost_kern = multi_opt_2d_cost_plots(disc, False)
-latent_cost_model, latent_cost_kernel =multi_opt_2d_cost_find_best_suited_kernel(X_cost_kern, Y_cost_kern, noise=noise_cost)
-cost_function = multi_opt_2d_cost
+X_cost_kern, Y_cost_kern = branin_res_cost_plots(disc, False)
+latent_cost_model, latent_cost_kernel =branin_res_cost_find_best_suited_kernel(X_cost_kern, Y_cost_kern, noise=noise_cost)
+cost_function = branin_res_cost
 
 num_layer = None; num_dense= None;
 hyper_opt_per= False
@@ -63,7 +63,7 @@ num_lthc_samples = 2000;
 num_ei_samples = 100
 
 
-'''eiw eipu'''
+'''eiw_eipu'''
 loss_list_eiw_eipu, Xt_eiw_eipu, Yt_eiw_eipu, model_eiw_eipu, cost_list_eiw_eipu, cum_cost_list_eiw_eipu, \
 latent_cost_model_eiw_eipu, f_best_list_eiw_eipu = \
     eiw_eipu_bo(D, objective_func, cost_function, y_true_opt, x_true_opt,
@@ -71,7 +71,7 @@ latent_cost_model_eiw_eipu, f_best_list_eiw_eipu = \
                 noise=noise, noise_cost=noise_cost, plot=False, plot_cost=False, num_layer=None,
                 num_dense=None,
                 num_epoch= None, X_init=None, Y_init=None, Y_cost_init=None, hyper_opt_per=False, plot_color=False,
-                num_lthc_samples=num_lthc_samples, num_ei_samples=num_ei_samples, sampling_method='random')
+                num_lthc_samples=num_lthc_samples, num_ei_samples=num_ei_samples, sampling_method='random', cut_below_avg= False)
 
 # '''imco'''
 # loss_list_imco, Xt_imco, Yt_imco, model_imco, cost_list_imco, cum_cost_list_imco, latent_cost_model_imco, f_best_list_imco = \
@@ -108,18 +108,18 @@ loss_list_ei_pu, Xt_ei_pu, Yt_ei_pu, model_ei_pu, cost_list_ei_pu, cum_cost_list
 
 plt.figure()
 
-plt.plot(np.squeeze(cum_cost_list_ei_pu), loss_list_ei_pu, label= 'ei_pu', alpha= 0.5)
-plt.scatter(np.squeeze(cum_cost_list_ei_pu), loss_list_ei_pu, label= 'ei_pu', alpha= 0.5)
+plt.plot(np.squeeze(cum_cost_list_ei_pu), np.log10(loss_list_ei_pu), label= 'ei_pu', alpha= 0.5)
+plt.scatter(np.squeeze(cum_cost_list_ei_pu), np.log10(loss_list_ei_pu), label= 'ei_pu', alpha= 0.5)
 
-plt.plot(np.squeeze(cum_cost_list_ei), loss_list_ei, label= 'ei', alpha= 0.5)
-plt.scatter(np.squeeze(cum_cost_list_ei), loss_list_ei, label= 'ei', alpha= 0.5)
+plt.plot(np.squeeze(cum_cost_list_ei), np.log10(loss_list_ei), label= 'ei', alpha= 0.5)
+plt.scatter(np.squeeze(cum_cost_list_ei), np.log10(loss_list_ei), label= 'ei', alpha= 0.5)
 
 
-plt.plot(np.squeeze(cum_cost_list_carbo),loss_list_carbo, label= 'carbo', alpha= 0.5)
-plt.scatter(np.squeeze(cum_cost_list_carbo),loss_list_carbo, label= 'carbo', alpha= 0.5)
+plt.plot(np.squeeze(cum_cost_list_carbo), np.log10(loss_list_carbo), label= 'carbo', alpha= 0.5)
+plt.scatter(np.squeeze(cum_cost_list_carbo), np.log10(loss_list_carbo), label= 'carbo', alpha= 0.5)
 
-plt.plot(np.squeeze(cum_cost_list_eiw_eipu),loss_list_eiw_eipu, label= 'eiw_eipu', alpha= 0.5)
-plt.scatter(np.squeeze(cum_cost_list_eiw_eipu),loss_list_eiw_eipu, label= 'eiw_eipu', alpha= 0.5)
+plt.plot(np.squeeze(cum_cost_list_eiw_eipu), np.log10(loss_list_eiw_eipu), label= 'eiw_eipu', alpha= 0.5)
+plt.scatter(np.squeeze(cum_cost_list_eiw_eipu),np.log10(loss_list_eiw_eipu), label= 'eiw_eipu', alpha= 0.5)
 
 # plt.plot(np.squeeze(cum_cost_list_imco), loss_list_imco, label= 'imco', alpha= 0.5)
 # plt.scatter(np.squeeze(cum_cost_list_imco), loss_list_imco, label= 'imco', alpha= 0.5)
@@ -128,8 +128,29 @@ plt.xlabel('cost'); plt.ylabel('loss'); plt.legend()
 plt.show()
 
 
-plot_colormaps(Xt_carbo, disc, objective_func, cost_function, domain, 'carbo')
-plot_colormaps(Xt_ei, disc, objective_func, cost_function, domain, 'ei')
-plot_colormaps(Xt_ei_pu, disc, objective_func, cost_function, domain, 'ei_pu')
-plot_colormaps(Xt_eiw_eipu,  disc, objective_func, cost_function, domain, 'eiw_eipu')
+# plt.figure()
+#
+# plt.plot(np.squeeze(cum_cost_list_ei_pu), np.squeeze(np.log10(np.array(f_best_list_pu)-y_true_opt)), label= 'ei_pu', alpha= 0.5)
+# plt.scatter(np.squeeze(cum_cost_list_ei_pu), np.squeeze(np.log10(np.array(f_best_list_pu)-y_true_opt)), label= 'ei_pu', alpha= 0.5)
+#
+# plt.plot(np.squeeze(cum_cost_list_ei), np.squeeze(np.log10(np.array(f_best_list_ei)-y_true_opt)), label= 'ei', alpha= 0.5)
+# plt.scatter(np.squeeze(cum_cost_list_ei), np.squeeze(np.log10(np.array(f_best_list_ei)-y_true_opt)), label= 'ei', alpha= 0.5)
+#
+#
+# # plt.plot(np.squeeze(cum_cost_list_carbo), np.squeeze(np.log10(np.array(f_best_list_carbo)-y_true_opt)), label= 'carbo', alpha= 0.5)
+# # plt.scatter(np.squeeze(cum_cost_list_carbo),  np.squeeze(np.log10(np.array(f_best_list_carbo)-y_true_opt)), label= 'carbo', alpha= 0.5)
+#
+# plt.plot(np.squeeze(cum_cost_list_eiw_eipu),  np.squeeze(np.log10(np.array(f_best_list_eiw_eipu)-y_true_opt)), label= 'eiw_eipu', alpha= 0.5)
+# plt.scatter(np.squeeze(cum_cost_list_eiw_eipu), np.squeeze(np.log10(np.array(f_best_list_eiw_eipu)-y_true_opt)), label= 'eiw_eipu', alpha= 0.5)
+#
+# # plt.plot(np.squeeze(cum_cost_list_imco), loss_list_imco, label= 'imco', alpha= 0.5)
+# # plt.scatter(np.squeeze(cum_cost_list_imco), loss_list_imco, label= 'imco', alpha= 0.5)
+#
+# plt.xlabel('cost'); plt.ylabel('loss'); plt.legend()
+# plt.show()
+
+# plot_colormaps(Xt_carbo, disc, objective_func, cost_function, domain, 'carbo')
+# plot_colormaps(Xt_ei, disc, objective_func, cost_function, domain, 'ei')
+# plot_colormaps(Xt_ei_pu, disc, objective_func, cost_function, domain, 'ei_pu')
+# plot_colormaps(Xt_eiw_eipu,  disc, objective_func, cost_function, domain, 'eiw_eipu')
 

@@ -48,8 +48,9 @@ def quadratic_2d_cost_plots(disc, plot= False):
 def quadratic_2d_cost_find_best_suited_kernel(X, Y, noise=10**(-4)):
 
     kernel= gp.kernels.RBF()
+    Y_latent= np.log(Y)
 
-    model= gp.models.GPR((X, Y), kernel )
+    model= gp.models.GPR((X, Y_latent), kernel )
     model.likelihood.variance.assign(noise)
     gp.set_trainable(model.likelihood, False)
 

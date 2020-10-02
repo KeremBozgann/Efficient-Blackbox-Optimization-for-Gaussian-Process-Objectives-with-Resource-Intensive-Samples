@@ -34,6 +34,9 @@ from multi_opt_different_cost_2d import *
 # from synthetic_2d_cost import *
 # from synthetic_2d_multi_opt_cost import *
 # from synthetic_2parts import *
+from griewank_2d import *
+
+
 from branin_res import *
 '''cost functions'''
 from exp_cos_1d import *
@@ -45,6 +48,7 @@ from multi_opt_different_cost_2d_cost import *
 # from synthetic_2d_multi_opt import *
 from synthetic_2parts_cost import *
 from branin_res_cost import *
+from griewank_2d_cost import *
 
 from keras_model import initial_training_cifar
 from keras_model import initial_training_fashion
@@ -72,14 +76,14 @@ D = 2
 noise = 10 ** (-3);
 noise_cost = 10 ** (-3);
 
-objective_func = branin_res;
-y_true_opt, x_true_opt, domain =branin_res_opt()
-X_kern, Y_kern = branin_res_plots(disc, plot=False)
-model, kernel =branin_res_find_best_suited_kernel(X_kern, Y_kern, noise=noise)
+objective_func = griewank_2d;
+y_true_opt, x_true_opt, domain =griewank_2d_opt()
+X_kern, Y_kern = griewank_2d_plots(disc, plot=False)
+model, kernel =griewank_2d_find_best_suited_kernel(X_kern, Y_kern, noise=noise)
 
-X_cost_kern, Y_cost_kern = branin_res_cost_plots(disc, False)
-latent_cost_model, latent_cost_kernel =branin_res_cost_find_best_suited_kernel(X_cost_kern, Y_cost_kern, noise=noise_cost)
-cost_function = branin_res_cost
+X_cost_kern, Y_cost_kern = griewank_2d_cost_plots(disc, False)
+latent_cost_model, latent_cost_kernel =griewank_2d_cost_find_best_suited_kernel(X_cost_kern, Y_cost_kern, noise=noise_cost)
+cost_function = griewank_2d_cost
 
 num_layer = None; num_dense= None;
 hyper_opt_per= False
