@@ -375,3 +375,31 @@ def ei_sampling(num_samples_uni, num_samples_ei, domain, model, f_best):
     X_ei= X_uni[choice, :]
     values_ei= ei_X[choice, :]
     return X_ei, values_ei
+
+from pyDOE import *
+
+def scale(domain, X):
+
+    for i in range(len(domain)):
+        lowi= domain[i][0]
+        highi= domain[i][1]
+        middle=( highi+lowi)/2
+        X[:,i]= (X[:,i]-0.5)*(highi- lowi)+middle
+
+    return X
+
+def ei_lthc_sampling(num_lthc_samples, num_ei_samples, domain, model, f_best):
+
+    D= len(domain)
+    X_lthc = lhs(D, samples=num_lthc_samples, criterion='maximin')
+    X_lthc= scale(domain, X_lthc)
+
+    u_X, var_X, sigma_X= get_mean_var_std(X_lthc, model)
+    ei_X= ei(sigma_X, u_X, f_best)
+    choice= np.random.choice(np.arange(X_lthc.shape[0]), num_ei_samples, p= ei_X[:, 0]/np.sum(ei_X, axis=0))
+
+    X_ei= X_lthc[choice, :]
+    values_ei= ei_X[choice, :]
+
+
+    return X_ei, values_ei

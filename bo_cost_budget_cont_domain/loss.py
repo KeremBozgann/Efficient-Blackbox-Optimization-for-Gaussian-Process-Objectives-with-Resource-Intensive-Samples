@@ -58,7 +58,7 @@ def loss_at_current_step_cont_domain(model, x_true_opt, y_true_opt, domain, xt, 
 
     '''Find estimated optimal point from posterior'''
 
-    if objective_func!= 'cifar' and objective_func!= 'fashion':
+    if objective_func!= 'cifar' and objective_func!= 'fashion' and objective_func!= 'fashion2':
         y_pred_opt = objective_func(x_pred_opt)
 
         print('u_opt_grid:{}, u_opt_sci:{}'.format(x_opt_grid_val, x_pred_opt_value_sci))
@@ -95,6 +95,22 @@ def loss_at_current_step_cont_domain(model, x_true_opt, y_true_opt, domain, xt, 
         # num_epoch= x_pred_opt[0, num_layer+ 2];
 
         y_pred_opt, y_pred_opt_cost,  x_pred_opt = keras_model.evaluate_error_and_cost(layer_sizes, alpha, l2_regul,  num_epoch= num_epoch)
+
+        print('optimum predicted design point:{}, objective value at predicted optimum:{}'.format(x_pred_opt, y_pred_opt))
+
+        loss = float(1+y_pred_opt)
+        print('loss of predicted point:', loss)
+
+    elif objective_func == 'fashion2':
+
+        print('u_opt_sci:{}'.format(x_pred_opt_value_sci))
+        print('evaluated point at this round:{}'.format(xt))
+        print('test error of keras model for the chosen point:{}'.format(yt))
+
+        layer_size = x_pred_opt[0,0]; num_layers= x_pred_opt[0,1]; alpha = x_pred_opt[0, 2];
+
+        y_pred_opt, y_pred_opt_cost,  x_pred_opt = keras_model.evaluate_error_and_cost(layer_size, num_layers,  alpha,
+                                                                                       num_epoch= num_epoch)
 
         print('optimum predicted design point:{}, objective value at predicted optimum:{}'.format(x_pred_opt, y_pred_opt))
 

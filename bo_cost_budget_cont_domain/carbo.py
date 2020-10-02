@@ -30,7 +30,7 @@ from EI_pu_opt import EI_pu_optimize_with_gradient
 
 from carbo_opt import carbo_optimize_with_gradient
 sys.path.append('../HPO')
-from keras_model import Keras_model_cifar, Keras_model_fashion
+from keras_model import Keras_model_cifar, Keras_model_fashion,  Keras_model_fashion2
 import tensorflow as tf
 import tensorflow_probability as tfp
 from hyperparameter_optimization import set_and_optimize_gp_model, logistic_bjt
@@ -70,14 +70,14 @@ def carbo_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_op
 
 
     '''grid for the plots'''
-    if D == 1 and (objective_func != 'cifar' and objective_func != 'fashion'):
+    if D == 1 and (objective_func != 'cifar' and objective_func != 'fashion' and objective_func != 'fashion2'):
         disc = 101
         x1 = np.linspace(domain[0][0], domain[0][1], disc)
         X_init_grid = x1.reshape(-1, 1)
         # Y_init_grid = objective_func(X_init_grid)
         # Y_init_grid_cost = cost_function(X_init_grid)
 
-    elif D == 2 and (objective_func != 'cifar' and objective_func != 'fashion'):
+    elif D == 2 and (objective_func != 'cifar' and objective_func != 'fashion' and objective_func != 'fashion2'):
         disc = 21
         x1 = np.linspace(domain[0][0], domain[0][1], disc)
         x2 = np.linspace(domain[1][0], domain[1][1], disc)
@@ -85,7 +85,7 @@ def carbo_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_op
         X1, X2 = np.meshgrid(x1, x2);
 
         X1_flat, X2_flat = X1.flatten(), X2.flatten();
-        X1_flat, X2_flat = X1.reshape(-1, 1), X2.reshape(-1, 1)
+        X1_flat, X2_flat = X1_flat.reshape(-1, 1), X2_flat.reshape(-1, 1)
 
         X_init_grid = np.append(X1_flat, X2_flat, axis=1)
         # Y_init_grid = objective_func(X_init_grid)
@@ -106,10 +106,36 @@ def carbo_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_op
         del X_temp
 
 
+    if objective_func == 'cifar':
+        cifar_model = Keras_model_cifar()
+        keras_model = cifar_model
+    elif objective_func == 'fashion':
+        fashion_model = Keras_model_fashion()
+        keras_model = fashion_model
+
+    elif objective_func == 'fashion2':
+        fashion_model2 = Keras_model_fashion2()
+        keras_model = fashion_model2
+    else:
+        keras_model= None
+
     budget_init= budget/8
     print('initial budget:{}'.format(budget_init))
-    X_init_bud, Y_cost_init_bud, Y_init_bud, c= initial_evaluations(X_init_grid, cost_function, objective_func, latent_cost_kernel,
-                            budget_init, noise_cost, D, num_layer, num_dense, num_epoch= num_epoch)
+
+    if X_init.shape[0]>0:
+        X_init_bud, Y_cost_init_bud, Y_init_bud, c, loss_list_init, cost_list_init, cum_cost_list_init, f_best_list_init= \
+            initial_evaluations(X_init_grid, cost_function, objective_func, latent_cost_kernel,
+                                budget_init, noise_cost, D, X_init, Y_init, Y_cost_init, kernel, noise, x_true_opt, y_true_opt,
+                                domain, objective_func, keras_model,
+                                num_layer, num_dense, num_epoch= num_epoch, random_restarts= 10)
+
+    else:
+        X_init_bud, Y_cost_init_bud, Y_init_bud, c, loss_list_init, cost_list_init, cum_cost_list_init, f_best_list_init= \
+            initial_evaluations(X_init_grid, cost_function, objective_func, latent_cost_kernel,
+                                budget_init, noise_cost, D, None, None, None, kernel, noise, x_true_opt, y_true_opt,
+                                domain, objective_func, keras_model,
+                                num_layer, num_dense, num_epoch= num_epoch, random_restarts= 10)
+
 
     print('X_init_bud shape:{}, c:{}'.format(X_init_bud.shape, c))
 
@@ -151,25 +177,27 @@ def carbo_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_op
         model, latent_cost_model, noise, noise_cost, log_Yt_cost, kernel, latent_cost_kernel= \
                 set_and_optimize_gp_model(optimize, D, Xt, Yt,  Yt_cost, noise, noise_cost, kernel, latent_cost_kernel, logistic, logistic_noise)
 
-    loss_list= []
-    cost_list= []
-    cum_cost_list= []
+    loss_list= loss_list_init.copy()
+    cost_list= cost_list_init.copy()
+    cum_cost_list= cum_cost_list_init.copy()
+    print('cum cost_lits', cum_cost_list)
+    f_best_list= f_best_list_init.copy()
     '''Run BO'''
-
+    print('f_best list', f_best_list)
     C=0
     C+= c
     t=0
 
-
+    print('Yt shape', Yt.shape)
     '''grid for the plots'''
-    if D==1 and (objective_func!= 'cifar' and  objective_func!= 'fashion'):
+    if D==1 and (objective_func!= 'cifar' and  objective_func!= 'fashion' and objective_func!= 'fashion2'):
         disc = 101
         x1 = np.linspace(domain[0][0], domain[0][1], disc)
         X= x1.reshape(-1,1)
         Y= objective_func(X)
         Y_cost= cost_function(X)
 
-    if D==2 and (objective_func!= 'cifar' and objective_func!= 'fashion'):
+    if D==2 and (objective_func!= 'cifar' and objective_func!= 'fashion' and objective_func!= 'fashion2'):
         disc=21
         x1 = np.linspace(domain[0][0], domain[0][1], disc)
         x2 = np.linspace(domain[1][0], domain[1][1], disc)
@@ -196,13 +224,8 @@ def carbo_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_op
             sigma_latent_cost = np.sqrt(var_latent_cost)
 
 
-    if objective_func == 'cifar':
-        cifar_model = Keras_model_cifar()
-    elif objective_func == 'fashion':
-        fashion_model = Keras_model_fashion()
 
-    f_best_list= []
-
+    print('f best',f_best)
     while C<budget:
         print('t:',t)
 
@@ -214,6 +237,11 @@ def carbo_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_op
                 layer_sizes = xt[0, 0:num_layer][0]; alpha = xt[0, num_layer]; l2_regul = xt[0, num_layer + 1];
                 # num_epoch = xt[0, num_layer + 2]
                 yt, yt_cost, xt = fashion_model.evaluate_error_and_cost(layer_sizes, alpha, l2_regul, num_epoch)
+
+            elif objective_func == 'fashion2':
+                layer_size = xt[0, 0]; num_layers= xt[0, 1]; alpha = xt[0, 2];
+                # num_epoch = xt[0, num_layer + 2]
+                yt, yt_cost, xt = fashion_model2.evaluate_error_and_cost(layer_size, num_layers, alpha, num_epoch)
 
             elif objective_func == 'cifar':
                 z = num_layer + num_dense; filter_sizes = xt[0, 0:num_layer]; dense_sizes = xt[0, num_layer:z];
@@ -247,7 +275,9 @@ def carbo_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_op
             if objective_func == 'fashion':
                 layer_sizes= xt[0, 0:num_layer]; alpha= xt[0, num_layer]; l2_regul= xt[0,num_layer+1]; #num_epoch= xt[0,num_layer+2]
                 yt, yt_cost, xt= fashion_model.evaluate_error_and_cost(layer_sizes, alpha, l2_regul, num_epoch)
-
+            if objective_func == 'fashion2':
+                layer_size = xt[0, 0]; num_layers= xt[0, 1]; alpha = xt[0, 2];
+                yt, yt_cost, xt = fashion_model2.evaluate_error_and_cost(layer_size, num_layers, alpha, num_epoch)
             elif objective_func == 'cifar':
                 z= num_layer+num_dense
                 filter_sizes= xt[0, 0:num_layer]; dense_sizes= xt[0,num_layer:z]; alpha= xt[0, z]; l2_regul= xt[0,z+1];
@@ -346,7 +376,14 @@ def carbo_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_op
             loss, x_pred_opt, y_pred_opt = loss_at_current_step_cont_domain(model, x_true_opt, y_true_opt, domain, xt,
                                               yt, objective_func, None, None, D, random_restarts= 10,
                                          keras_model = fashion_model, num_layer= num_layer, num_dense= None,
+                                                            num_epoch= num_epoch)
+
+        elif objective_func == 'fashion2':
+            loss, x_pred_opt, y_pred_opt = loss_at_current_step_cont_domain(model, x_true_opt, y_true_opt, domain, xt,
+                                              yt, objective_func, None, None, D, random_restarts= 10,
+                                         keras_model = fashion_model2, num_layer= None, num_dense= None,
                                                                             num_epoch= num_epoch)
+
         elif objective_func=='cifar':
             loss, x_pred_opt, y_pred_opt= loss_at_current_step_cont_domain(model, x_true_opt, y_true_opt, domain, xt, yt,
                                            objective_func, None,  None, D, random_restarts= 10,
@@ -367,9 +404,9 @@ def carbo_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_op
         cost_list.append(yt_cost)
         '''increment the counter'''
 
-        C+= yt_cost
+        C+= float(yt_cost)
         print('total cost:', C)
-        cum_cost_list.append(C.copy())
+        cum_cost_list.append(C)
 
         t+= 1
         f_best_list.append(f_best)
@@ -394,7 +431,7 @@ from six_hump_camel import *
 from exp_cos_2d import *
 from exp_cos_1d import *
 
-def test_synthetic():
+def test_sine():
 
     '''dimension dependent assignments'''
     disc= 101
@@ -422,11 +459,53 @@ def test_synthetic():
     budget= 20
 
 
-    loss_list, Xt, Yt, model, cost_list, cum_cost_list, latent_cost_kernel = carbo_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_opt,
+    loss_list, Xt, Yt, model, cost_list, cum_cost_list, latent_cost_kernel, f_best_list = \
+        carbo_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_opt,
                  domain, kernel, budget, x0, latent_cost_kernel, random_restarts, num_iter_max, grid,
-                         noise=noise, noise_cost= noise_cost, plot=False, plot_cost= False, num_layer= None,
-                        num_dense= None, hyper_opt_per= 5)
+                         noise= noise, noise_cost= noise_cost, plot=False, plot_cost= False, num_layer= None,
+                        num_dense= None, num_epoch= 1.7, hyper_opt_per= False, X_init= None, Y_init= None, Y_cost_init= None)
 
+
+import sys
+sys.path.append('../cost_functions')
+sys.path.append('../functions')
+
+from synthetic_2d import *
+from synthetic_2d_cost import *
+
+def test_synthetic_2d():
+
+    '''dimension dependent assignments'''
+    disc= 21
+    D= 2;
+    noise= 10**(-3); noise_cost= 10**(-3)
+
+    objective_func= synthetic_2d;
+    y_true_opt, x_true_opt, domain= synthetic_2d_opt()
+    X, Y= synthetic_2d_plots(disc, plot= False)
+    model ,kernel=  synthetic_2d_find_best_suited_kernel(X, Y, noise=10**(-4))
+
+    X_cost, Y_cost= synthetic_2d_cost_plots(disc, False)
+    latent_cost_model , latent_cost_kernel= synthetic_2d_cost_find_best_suited_kernel(X_cost, Y_cost, noise=10**(-4))
+    cost_function= synthetic_2d_cost
+
+
+    lower = [domain[i][0] for i in range(len(domain))]; upper = [domain[i][1] for i in range(len(domain))]
+
+    x0= np.random.uniform(lower, upper, (1,D))
+
+    random_restarts= False;
+    num_iter_max= 100
+    grid= True
+
+    budget= 20
+
+
+    loss_list, Xt, Yt, model, cost_list, cum_cost_list, latent_cost_kernel, f_best_list = \
+        carbo_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_opt,
+                 domain, kernel, budget, x0, latent_cost_kernel, random_restarts, num_iter_max, grid,
+                         noise= noise, noise_cost= noise_cost, plot=False, plot_cost= False, num_layer= None,
+                        num_dense= None, num_epoch= 1.7, hyper_opt_per= False, X_init= None, Y_init= None, Y_cost_init= None)
 
 sys.path.append('../HPO')
 from keras_model import  get_cifar_domain
@@ -478,7 +557,7 @@ def test_cifar():
 
     y_true_opt= None;  x_true_opt= None
 
-    loss_list, Xt, Yt, model, cost_list, cum_cost_list, latent_cost_kernel = carbo_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_opt,
+    loss_list, Xt, Yt, model, cost_list, cum_cost_list, latent_cost_kernel, f_best_list = carbo_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_opt,
                  domain, kernel, budget, None, latent_cost_kernel, random_restarts, num_iter_max, grid,
                          noise= None, noise_cost= None, plot=False, plot_cost= False, num_layer= num_layer,
                         num_dense= num_dense, hyper_opt_per= 5, X_init= X, Y_init = Y, Y_cost_init= Y_cost)
@@ -525,9 +604,67 @@ def test_fashion():
 
     y_true_opt= None;  x_true_opt= None
 
-    loss_list, Xt, Yt, model, cost_list, cum_cost_list, latent_cost_kernel = carbo_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_opt,
+
+    lower = [domain[i][0] for i in range(len(domain))]; upper = [domain[i][1] for i in range(len(domain))]
+
+    x0= np.random.uniform(lower, upper, (1,D))
+
+
+
+
+    loss_list, Xt, Yt, model, cost_list, cum_cost_list, latent_cost_kernel, f_best_list = \
+        carbo_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_opt,
+                 domain, kernel, budget, x0, latent_cost_kernel, random_restarts, num_iter_max, grid,
+                         noise= noise, noise_cost= noise_cost, plot=False, plot_cost= False, num_layer= num_layer,
+                        num_dense= None, num_epoch= 1.7, hyper_opt_per= 5, X_init= X, Y_init= Y, Y_cost_init= Y_cost)
+
+sys.path.append('../cost_functions')
+sys.path.append('../functions')
+sys.path.append('../HPO')
+
+from keras_model import get_fashion2_domain,initial_training_fashion2
+
+def test_fashion2():
+
+
+
+    '''dimension dependent assignments'''
+    # disc= 101
+    D= 3;
+
+
+    objective_func= 'fashion2'; cost_function= None;
+    num_init_train_samples=1;
+
+    '''initial noise guess for initial hyperparameter optimization'''
+    noise= 10**(-3); noise_cost= 10**(-3)
+    domain= get_fashion2_domain()
+
+    # y_true_opt, x_true_opt, domain= sin_opt()
+
+    X, Y, Y_cost = initial_training_fashion2(domain,  num_init_train_samples, num_epoch= 1.7)
+    kernel, latent_cost_kernel= find_best_suited_gp_kernels(X, Y, Y_cost, noise, noise_cost)
+
+
+    # X, Y= sin_plots(disc, plot= False)
+    # model ,kernel= sin_find_best_suited_kernel(X, Y, noise=10**(-4))
+
+    # X_cost, Y_cost= exp_cos_1d_plots(disc, False)
+    # latent_cost_model , latent_cost_kernel= exp_cos_1d_find_best_suited_kernel(X_cost, Y_cost, noise=10**(-4))
+    # cost_function= exp_cos_1d
+
+    # lower = [domain[i][0] for i in range(len(domain))]; upper = [domain[i][1] for i in range(len(domain))]
+
+    # x0= np.random.uniform(lower, upper, (1,D))
+
+    budget= 700
+    random_restarts= 10
+    num_iter_max= 100
+    grid= False
+
+    y_true_opt= None;  x_true_opt= None
+
+    loss_list, Xt, Yt, model, cost_list, cum_cost_list, latent_cost_kernel, f_best_list= carbo_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_opt,
                  domain, kernel, budget, None, latent_cost_kernel, random_restarts, num_iter_max, grid,
-                         noise=None, noise_cost= None, plot=False, plot_cost= False, num_layer= num_layer,
+                         noise=None, noise_cost= None, plot=False, plot_cost= False, num_layer= None,
                         num_dense= None, hyper_opt_per= 5, X_init= X, Y_init = Y, Y_cost_init= Y_cost)
-
-

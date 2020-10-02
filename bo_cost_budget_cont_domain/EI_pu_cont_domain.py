@@ -29,7 +29,8 @@ from EI_pu_opt import EI_pu_optimize_with_gradient
 import tensorflow_probability as tfp
 
 sys.path.append('../HPO')
-from keras_model import Keras_model_cifar, Keras_model_fashion
+from keras_model import Keras_model_cifar, Keras_model_fashion, Keras_model_fashion2
+
 
 import tensorflow as tf
 from hyperparameter_optimization import set_and_optimize_gp_model
@@ -76,14 +77,14 @@ def EI_pu_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_op
 
 
     '''grid for the plots'''
-    if D==1 and (objective_func!= 'cifar' and  objective_func!= 'fashion'):
+    if D==1 and (objective_func!= 'cifar' and  objective_func!= 'fashion' and objective_func!= 'fashion2'):
         disc = 101
         x1 = np.linspace(domain[0][0], domain[0][1], disc)
         X= x1.reshape(-1,1)
         Y= objective_func(X)
         Y_cost= cost_function(X)
 
-    if D==2 and (objective_func!= 'cifar' and objective_func!= 'fashion'):
+    if D==2 and (objective_func!= 'cifar' and objective_func!= 'fashion' and objective_func!= 'fashion2'):
         disc=21
         x1 = np.linspace(domain[0][0], domain[0][1], disc)
         x2 = np.linspace(domain[1][0], domain[1][1], disc)
@@ -121,7 +122,8 @@ def EI_pu_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_op
         cifar_model= Keras_model_cifar()
     elif objective_func=='fashion':
         fashion_model= Keras_model_fashion()
-
+    elif objective_func == 'fashion2':
+        fashion_model2 = Keras_model_fashion2()
     f_best_list= []
     while C<budget:
         print('t:',t)
@@ -136,6 +138,10 @@ def EI_pu_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_op
                 l2_regul = xt[0, num_layer + 1];
                 # num_epoch = xt[0, num_layer + 2]
                 yt, yt_cost, xt = fashion_model.evaluate_error_and_cost(layer_sizes, alpha, l2_regul, num_epoch)
+            elif objective_func == 'fashion2':
+                layer_size = xt[0, 0]; num_layers= xt[0, 1]; alpha = xt[0, 2];
+                # num_epoch = xt[0, num_layer + 2]
+                yt, yt_cost, xt = fashion_model2.evaluate_error_and_cost(layer_size, num_layers, alpha, num_epoch)
 
             elif objective_func == 'cifar':
                 z = num_layer + num_dense;
@@ -165,7 +171,9 @@ def EI_pu_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_op
             if objective_func == 'fashion':
                 layer_sizes= xt[0, 0:num_layer]; alpha= xt[0, num_layer]; l2_regul= xt[0,num_layer+1]; #num_epoch= xt[0,num_layer+2]
                 yt, yt_cost, xt= fashion_model.evaluate_error_and_cost(layer_sizes, alpha, l2_regul, num_epoch)
-
+            if objective_func == 'fashion2':
+                layer_size = xt[0, 0]; num_layers= xt[0, 1]; alpha = xt[0, 2];
+                yt, yt_cost, xt = fashion_model2.evaluate_error_and_cost(layer_size, num_layers, alpha, num_epoch)
             elif objective_func == 'cifar':
                 z= num_layer+num_dense
                 filter_sizes= xt[0, 0:num_layer]; dense_sizes= xt[0,num_layer:z]; alpha= xt[0, z]; l2_regul= xt[0,z+1];
@@ -256,6 +264,11 @@ def EI_pu_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_op
             loss, x_pred_opt, y_pred_opt = loss_at_current_step_cont_domain(model, x_true_opt, y_true_opt, domain, xt,
                                               yt, objective_func, None, None, D, random_restarts= 10,
                                          keras_model = fashion_model, num_layer= num_layer, num_dense= None, num_epoch= num_epoch)
+        elif objective_func == 'fashion2':
+            loss, x_pred_opt, y_pred_opt = loss_at_current_step_cont_domain(model, x_true_opt, y_true_opt, domain, xt,
+                                              yt, objective_func, None, None, D, random_restarts= 10,
+                                         keras_model = fashion_model2, num_layer= None, num_dense= None,
+                                                                            num_epoch= num_epoch)
         elif objective_func=='cifar':
             loss, x_pred_opt, y_pred_opt= loss_at_current_step_cont_domain(model, x_true_opt, y_true_opt, domain, xt, yt,
                                            objective_func, None,  None, D, random_restarts= 10,
@@ -281,7 +294,7 @@ def EI_pu_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_op
         t+= 1
         f_best_list.append(f_best)
 
-    if plot_color==True and D==2 and objective_func!= 'cifar' and objective_func!= 'fashion':
+    if plot_color==True and D==2 and objective_func!= 'cifar' and objective_func!= 'fashion'and objective_func!= 'fashion2':
         plot_colormaps(Xt, 21, objective_func, cost_function, domain)
         plot_loss_vs_time(loss_list, cum_cost_list)
         Y=  objective_func(X)
@@ -413,8 +426,10 @@ def test_multi_opt_2d():
 sys.path.append('../HPO')
 from keras_model import  get_cifar_domain
 from keras_model import  get_fashion_domain
+from keras_model import  get_fashion2_domain
 from keras_model import initial_training_cifar
 from keras_model import initial_training_fashion
+from keras_model import initial_training_fashion2
 from keras_model import find_best_suited_gp_kernels
 
 from gpflow.utilities import print_summary
@@ -511,4 +526,50 @@ def test_fashion():
 
 
 
+def test_fashion2():
+
+    '''dimension dependent assignments'''
+    # disc= 101
+    D= 3;
+
+
+    objective_func= 'fashion2'; cost_function= None;
+    num_init_train_samples=1;
+
+    '''initial noise guess for initial hyperparameter optimization'''
+    noise= 10**(-3); noise_cost= 10**(-3)
+    domain= get_fashion2_domain()
+
+    # y_true_opt, x_true_opt, domain= sin_opt()
+
+    X, Y, Y_cost = initial_training_fashion2(domain,  num_init_train_samples, num_epoch= 1.7)
+    kernel, latent_cost_kernel= find_best_suited_gp_kernels(X, Y, Y_cost, noise, noise_cost)
+
+
+    # X, Y= sin_plots(disc, plot= False)
+    # model ,kernel= sin_find_best_suited_kernel(X, Y, noise=10**(-4))
+
+    # X_cost, Y_cost= exp_cos_1d_plots(disc, False)
+    # latent_cost_model , latent_cost_kernel= exp_cos_1d_find_best_suited_kernel(X_cost, Y_cost, noise=10**(-4))
+    # cost_function= exp_cos_1d
+
+    # lower = [domain[i][0] for i in range(len(domain))]; upper = [domain[i][1] for i in range(len(domain))]
+
+    # x0= np.random.uniform(lower, upper, (1,D))
+
+    budget= 500
+    random_restarts= 10
+    num_iter_max= 100
+    grid= False
+    hyper_opt_per = 5
+
+    y_true_opt= None;  x_true_opt= None
+
+    loss_list, Xt, Yt, model, cost_list, cum_cost_list, latent_cost_model, f_best_list= \
+            EI_pu_bo_cont_domain(D, objective_func, cost_function, y_true_opt, x_true_opt,
+                             domain, kernel, budget, None, latent_cost_kernel, random_restarts, num_iter_max, grid,
+                             noise= noise, noise_cost= noise_cost, plot=False, plot_cost=False, num_layer=None,
+                             num_dense=None,
+                             num_epoch=1.7, X_init=X, Y_init=Y, Y_cost_init=Y_cost, hyper_opt_per=hyper_opt_per,
+                             plot_color=False)
 

@@ -90,6 +90,63 @@ class Keras_model_fashion():
 
         return np.atleast_2d(-test_acc), np.atleast_2d(t2- t1), xt_eval
 
+class Keras_model_fashion2():
+
+    def __init__(self):
+        (train_images, train_labels), (test_images, test_labels) = keras.datasets.fashion_mnist.load_data()
+        self.train_images= train_images
+        self.train_labels= train_labels
+        self.test_images= test_images
+        self.test_labels= test_labels
+
+    def evaluate_error_and_cost(self, layer_size, num_layers, alpha, num_epoch):
+        layer_size= np.int(np.power(2.0, layer_size))
+        alpha= np.power(10.0, alpha)
+        # l2_regul= np.power(10.0, l2_regul)
+        num_epoch= np.int(np.rint(np.power(10, num_epoch)))
+        num_layers= np.int(num_layers)
+
+        xt_eval= np.empty([1, 3])
+
+        xt_eval[0, 0]= np.log2(layer_size)
+        xt_eval[0, 1]= num_layers
+        # xt_eval[0,len(filter_sizes):len(filter_sizes)+ len(dense_sizes)]= np.log2(dense_sizes[:])
+        xt_eval[0,1]= np.log10(alpha)
+        # xt_eval[0,2]= np.log10(l2_regul)
+
+        print('layer_sizes:{}\nnum_layers:{}\nalpha:{}\nnum_epoch:{}'.format(layer_size, num_layers, alpha,
+                                                                            num_epoch))
+        '''define model'''
+        t1= time.clock()
+        model = Sequential()
+        model.add(keras.layers.Flatten(input_shape=(28, 28)))
+        for i in range(num_layers):
+            model.add(keras.layers.Dense(layer_size, activation='relu',
+                                         kernel_initializer='he_uniform'))
+        model.add(keras.layers.Dense(10))
+        # model = keras.Sequential([
+        #     keras.layers.Flatten(input_shape=(28, 28)),
+        #     keras.layers.Dense(layer_sizes[0], activation='relu',  kernel_initializer='he_uniform', kernel_regularizer= l2(l2_regul)),
+        #     keras.layers.Dense(layer_sizes[1], activation='relu', kernel_initializer='he_uniform', kernel_regularizer= l2(l2_regul)),
+        #     keras.layers.Dense(layer_sizes[2], activation='relu', kernel_initializer='he_uniform', kernel_regularizer= l2(l2_regul)),
+        #     keras.layers.Dense(layer_sizes[3], activation='relu', kernel_initializer='he_uniform', kernel_regularizer= l2(l2_regul)),
+        #     keras.layers.Dense(10)
+        # ])
+        opt = keras.optimizers.Adam(learning_rate= alpha)
+        '''compile model'''
+        model.compile(optimizer= opt,  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                      metrics=['accuracy'])
+
+        '''fit'''
+        model.fit(self.train_images, self.train_labels, epochs= num_epoch)
+
+        '''test set accuracy'''
+        test_loss, test_acc = model.evaluate(self.test_images,  self.test_labels, verbose=2)
+        print('\nTest accuracy:', test_acc)
+        t2= time.clock()
+
+        return np.atleast_2d(-test_acc), np.atleast_2d(t2- t1), xt_eval
+
 
 
 class Keras_model_cifar():
@@ -275,6 +332,24 @@ def initial_training_fashion(domain, num_samples, num_layer, num_epoch= 1.7):
 
     return X, Y, Y_cost
 
+def initial_training_fashion2(domain, num_samples, num_epoch= 1.7):
+
+    X= uniformly_choose_from_domain(domain, num_samples)
+
+    keras_model= Keras_model_fashion2()
+
+    Y= np.empty([X.shape[0], 1])
+    Y_cost= np.empty([X.shape[0], 1])
+
+    for i in range(X.shape[0]):
+        xi= X[i, :].reshape(1,-1)
+        layer_size = xi[0, 0]; num_layers = xi[0, 1];alpha = xi[0, 2];
+        #num_epoch= xi[0, num_layer+2]
+
+        Y[i, 0], Y_cost[i, 0], X[i, :]= keras_model.evaluate_error_and_cost(layer_size, num_layers,  alpha, num_epoch)
+
+    return X, Y, Y_cost
+
 
 def get_cifar_domain(num_layer, num_dense):
 
@@ -308,6 +383,15 @@ def get_fashion_domain(num_layer):
     domain.append(domain_alpha_log10)
     domain.append(domain_l2_regul)
     #domain.append(domain_num_epoch_log10)
+
+    return domain
+
+def get_fashion2_domain():
+
+    domain_layer_size_log2= [0.0, 8.0]; domain_alpha_log10= [-6.0, 0.0];
+    domain_num_layers = [1, 8]
+
+    domain= [domain_layer_size_log2, domain_num_layers, domain_alpha_log10]
 
     return domain
 
@@ -370,7 +454,17 @@ def test_model_fashion():
     domain_epochs= [1,100]
     layer_sizes= [32, 32, 32, 32, 32]; alpha_log= -4; l2_regul_log= -2; num_epoch_log= 1
     l2_regul= 10**(l2_regul_log); alpha= 10**(alpha_log); num_epoch= 10**(num_epoch_log)
-    test_loss, time_cost= keras_model.evaluate_error_and_cost(layer_sizes, alpha, l2_regul, num_epoch)
+    test_loss, time_cost, x_eval= keras_model.evaluate_error_and_cost(layer_sizes, alpha, l2_regul, num_epoch)
+    print('test_loss:{}, time_cost:{}'.format(test_loss, time_cost))
+
+def test_model_fashion2():
+    fashion_mnist = keras.datasets.fashion_mnist
+    (train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()
+    domain= get_fashion2_domain()
+    keras_model= Keras_model_fashion2()
+
+    layer_size= 5; num_layers= 4; alpha= -4
+    test_loss, time_cost, x_eval= keras_model.evaluate_error_and_cost(layer_size, num_layers, alpha, 1.7)
     print('test_loss:{}, time_cost:{}'.format(test_loss, time_cost))
 
 def test_model_cifar():

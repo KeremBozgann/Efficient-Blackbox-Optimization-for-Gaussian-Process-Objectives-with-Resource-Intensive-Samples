@@ -24,13 +24,13 @@ def delete_invalid_loss_and_count(loss_and_count_dict):
 
     return new_dict
 
-folder= '14_09_2020'
+folder= '01_10_2020/multi_opt_2d'
 file_dir1= '../Results/'+folder+'/exp1.h5'
 files= [file_dir1]
 
-num_iter1= 1
-methods= ['ei_pu', 'carbo', 'ei',  'kgpc']
-cost_disc_num= 100
+num_iter1= 7
+methods= ['ei_pu', 'carbo', 'ei',  'imco']
+cost_disc_num= 40
 
 folder= '14_09_2020'
 exp_name= 'exp2'
@@ -60,7 +60,7 @@ for file in files:
             f_best = np.zeros([cost_disc_num])
 
             for iter_num in range(num_iter1):
-
+                # print(np.array(hf.get('iter_{}_method_{}_loss'.format(iter_num, method))))
                 lossi= np.array(hf.get('iter_{}_method_{}_loss'.format(iter_num, method)))
                 counti= np.array(hf.get('iter_{}_method_{}_count'.format(iter_num, method)))
                 costi = np.array(hf.get('iter_{}_method_{}_cost_grid'.format(iter_num, method)))
@@ -82,6 +82,6 @@ for file in files:
 
 loss_and_count_dict= delete_invalid_loss_and_count(loss_and_count_dict)
 
-# plot_and_save_average_loss(loss_and_count_dict, folder, exp_name)
+plot_and_save_average_loss(loss_and_count_dict, folder, exp_name)
 #
 # save_results_without_params(loss_and_count_dict, folder, exp_name)

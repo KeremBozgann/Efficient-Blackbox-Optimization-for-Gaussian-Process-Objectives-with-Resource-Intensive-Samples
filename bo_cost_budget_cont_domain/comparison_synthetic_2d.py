@@ -144,7 +144,7 @@ count_carbo= np.zeros(cost_grid.shape); loss_carbo= np.zeros(cost_grid.shape); f
 # count_pucla_v2= np.zeros(cost_grid.shape); loss_pucla_v2= np.zeros(cost_grid.shape);
 # count_ppu= np.zeros(cost_grid.shape); loss_ppu= np.zeros(cost_grid.shape); f_best_ppu= np.zeros(cost_grid.shape)
 # count_prox= np.zeros(cost_grid.shape); loss_prox= np.zeros(cost_grid.shape); f_best_prox= np.zeros(cost_grid.shape)
-count_imco= np.zeros(cost_grid.shape); loss_imcox= np.zeros(cost_grid.shape); f_best_imco= np.zeros(cost_grid.shape)
+count_imco= np.zeros(cost_grid.shape); loss_imco= np.zeros(cost_grid.shape); f_best_imco= np.zeros(cost_grid.shape)
 
 for i in range(total_iterations):
     print('iteration: ', i)

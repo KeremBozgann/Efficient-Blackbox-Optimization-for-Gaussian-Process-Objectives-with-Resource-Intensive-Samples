@@ -24,7 +24,7 @@ class imco_opt():
 
         # print('ei_avg_diff:{}, cost_prev:{}, dei_dcostself.dei_dcost{}'.format(dei, cost_prev, self.dei_dcost))
         # print('values_prev:{}, values:{}'.format(values_prev, values))
-
+        print('avg ei-per_cost:{}\n'.format(self.mean_ei_pu))
     def imco_optimize_grid(self, X_grid, model, f_best, latent_cost_model):
 
         u_X_grid, var_X_grid, sigma_X2_grid = get_mean_var_std(X_grid, model)

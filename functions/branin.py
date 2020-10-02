@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 import math
 import gpflow as gp
 from gpflow.utilities import print_summary
+import sys
+sys.path.append('../bo_cost_budget_cont_domain')
+from hyperparameter_optimization import logistic_bjt
 
 def branin(X):
 
@@ -52,10 +55,24 @@ def branin_plots(disc, plot= False):
 
 def branin_find_best_suited_kernel(X, Y, noise=10**(-4)):
 
-    kernel= gp.kernels.RBF()
+    '''constraint values'''
+    lower= 10**(-5); upper= 10**(6); #lengtscale and variance constarint
+    lower_noise= 10**(-5); upper_noise= 10**(6); #noise constarint
 
-    model= gp.models.GPR((X, Y), kernel )
+    logistic = logistic_bjt(lower, upper)
+    logistic_noise = logistic_bjt(lower_noise, upper_noise)
+
+    D= X.shape[1]
+    kernel = gp.kernels.RBF(lengthscales=np.array([1] * D))
+
+    model = gp.models.GPR((X, Y), kernel=kernel)
+    '''set hyperparameter constraints'''
+    model.kernel.lengthscales = gp.Parameter(model.kernel.lengthscales.numpy(), transform=logistic)
+    model.kernel.variance = gp.Parameter(model.kernel.variance.numpy(), transform=logistic)
+    # model.likelihood.variance = gp.Parameter(model.likelihood.variance.numpy(), transform=logistic_noise)
+
     model.likelihood.variance.assign(noise)
+
     gp.set_trainable(model.likelihood, False)
 
     opt = gp.optimizers.Scipy()

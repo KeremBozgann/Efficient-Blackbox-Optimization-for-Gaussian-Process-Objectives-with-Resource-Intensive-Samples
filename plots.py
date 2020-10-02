@@ -462,11 +462,12 @@ def plot_cost_posterior_cont_domain_2d(X, u_cost, Xt, Yt_cost, xt, latent_cost_m
     ax.legend()
     plt.show()
 
-def plot_acquisitions_cont_domain_colormap_2d(x1_max, x2_max, x1_min, x2_min, disc, Acq_dict, xt):
+def plot_acquisitions_cont_domain_colormap_2d(x1_max, x2_max, x1_min, x2_min, disc, Acq_dict, xt, Xt):
 
     Acq_normalized_dict = {}
+    fig, axs = plt.subplots(len(Acq_dict), 1)
 
-    for method in Acq_dict:
+    for i, method in enumerate(Acq_dict):
         # Acq_normalized_dict[method] = Acq_dict[method] / np.sum(Acq_dict[method], axis=0)
 
         # Acq_normalized= Acq_normalized_dict[method]
@@ -474,9 +475,10 @@ def plot_acquisitions_cont_domain_colormap_2d(x1_max, x2_max, x1_min, x2_min, di
         Acq_reshaped= Acq_normalized.reshape(disc,disc)
 
         print(x1_min, x1_max, x2_min, x2_max)
-        plt.figure()
-        plt.title('Acq_{}'.format(method))
-        im = plt.imshow(Acq_reshaped, cmap=plt.cm.RdBu, extent=(x1_min, x1_max, x2_max, x2_min))
+
+        axs[i].set_title('Acq_{}'.format(method))
+        im = axs[i].imshow(Acq_reshaped, cmap=plt.cm.RdBu, extent=(x1_min, x1_max, x2_max, x2_min))
+
 
         # cset = plt.contour(Z, np.arange(-1, 1.5, 0.2), linewidths=2,
         #                    cmap=plt.cm.Set2,
@@ -485,10 +487,12 @@ def plot_acquisitions_cont_domain_colormap_2d(x1_max, x2_max, x1_min, x2_min, di
         # plt.clabel(cset, inline=True, fmt='%1.1f', fontsize=10)
 
         plt.colorbar(im)
-        plt.scatter(xt[0,0], xt[0,1], color= 'orange', label= 'chosen point')
-        plt.legend()
-        plt.xlabel('x1'); plt.ylabel('x2')
+        axs[i].scatter(Xt[:, 0], Xt[:, 1], color='orange')
+        axs[i].scatter(xt[0,0], xt[0,1], color= 'blue', label= 'chosen point')
+        axs[i].legend()
+        axs[i].set_xlabel('x1'); plt.ylabel('x2')
         # plt.show()
+    plt.show()
 
 def test_colormap():
 
