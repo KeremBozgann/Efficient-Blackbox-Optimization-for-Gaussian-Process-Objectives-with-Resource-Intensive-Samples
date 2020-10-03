@@ -28,13 +28,14 @@ def griewank_2d_cost(X):
         term2 *= np.cos(xi / np.sqrt(i + 1))
     result = term1 / 4000 - term2 + 1
 
-    return np.exp(-result)
+    return np.exp(-result)+0.5 #added 0.5 term
 
 def griewank_2d_cost_opt():
 
     y_opt= 0.0
     x_opt= [[0.0, 0.0]]
-    domain=  [[-5,5], [-5,5]]
+    domain= [[-10,10], [-10,10]]
+
 
     return y_opt, x_opt, domain
 
@@ -53,12 +54,12 @@ def scipy_minimize_griewank_2d_cost():
             term1 += xi ** 2
             term2 *= np.cos(xi / np.sqrt(i+1))
         result = term1 / 4000 - term2 + 1
-        result=  np.exp(-result)
+        result=  np.exp(-result)+0.5
         result= result.flatten()
 
-        return result
+        return -result
 
-    domain= [[-5,5], [-5,5]]
+    domain= [[-10,10], [-10,10]]
 
     lower = [];upper = []
     D = 2
@@ -85,7 +86,8 @@ def griewank_2d_cost_plots(disc, plot= False):
 
 
 
-    domain= [[-5,5], [-5,5]]
+    domain= [[-10,10], [-10,10]]
+
     x1 = np.linspace(domain[0][0], domain[0][1], disc)
     x2 = np.linspace(domain[1][0], domain[1][1], disc)
     x1_max, x2_max, x1_min, x2_min = np.max(x1), np.max(x2), np.min(x1), np.min(x2)

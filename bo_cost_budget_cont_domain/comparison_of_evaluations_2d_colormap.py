@@ -18,7 +18,7 @@ from synthetic_2d import *
 from synthetic_2d_multi2 import *
 from synthetic_2d_multi_opt import *
 from synthetic_2parts import *
-from griewank import *
+from griewank_2d import *
 
 '''costs'''
 from multi_opt_different_cost_1d_cost import *
@@ -33,14 +33,14 @@ D = 2
 noise = 10 ** (-3);
 noise_cost = 10 ** (-3);
 
-objective_func = branin_res;
-y_true_opt, x_true_opt, domain = branin_res_opt()
-X_kern, Y_kern = branin_res_plots(disc, plot=False)
-model, kernel =branin_res_find_best_suited_kernel(X_kern, Y_kern, noise=noise)
+objective_func = synthetic_multi_2d;
+y_true_opt, x_true_opt, domain =synthetic_multi_2d_opt()
+X_kern, Y_kern = synthetic_multi_2d_plots(disc, plot=False)
+model, kernel =synthetic_multi_2d_find_best_suited_kernel(X_kern, Y_kern, noise=noise)
 
-X_cost_kern, Y_cost_kern = branin_res_cost_plots(disc, False)
-latent_cost_model, latent_cost_kernel =branin_res_cost_find_best_suited_kernel(X_cost_kern, Y_cost_kern, noise=noise_cost)
-cost_function = branin_res_cost
+X_cost_kern, Y_cost_kern = synthetic_multi_2d_cost_plots(disc, False)
+latent_cost_model, latent_cost_kernel =synthetic_multi_2d_cost_find_best_suited_kernel(X_cost_kern, Y_cost_kern, noise=noise_cost)
+cost_function = synthetic_multi_2d_cost
 
 num_layer = None; num_dense= None;
 hyper_opt_per= False
@@ -108,24 +108,46 @@ loss_list_ei_pu, Xt_ei_pu, Yt_ei_pu, model_ei_pu, cost_list_ei_pu, cum_cost_list
 
 plt.figure()
 
-plt.plot(np.squeeze(cum_cost_list_ei_pu), np.log10(loss_list_ei_pu), label= 'ei_pu', alpha= 0.5)
-plt.scatter(np.squeeze(cum_cost_list_ei_pu), np.log10(loss_list_ei_pu), label= 'ei_pu', alpha= 0.5)
+plt.plot(np.squeeze(cum_cost_list_ei_pu), np.array(loss_list_ei_pu), label= 'ei_pu', alpha= 0.5)
+plt.scatter(np.squeeze(cum_cost_list_ei_pu), np.array(loss_list_ei_pu), label= 'ei_pu', alpha= 0.5)
 
-plt.plot(np.squeeze(cum_cost_list_ei), np.log10(loss_list_ei), label= 'ei', alpha= 0.5)
-plt.scatter(np.squeeze(cum_cost_list_ei), np.log10(loss_list_ei), label= 'ei', alpha= 0.5)
+plt.plot(np.squeeze(cum_cost_list_ei),np.array(loss_list_ei), label= 'ei', alpha= 0.5)
+plt.scatter(np.squeeze(cum_cost_list_ei), np.array(loss_list_ei), label= 'ei', alpha= 0.5)
 
 
-plt.plot(np.squeeze(cum_cost_list_carbo), np.log10(loss_list_carbo), label= 'carbo', alpha= 0.5)
-plt.scatter(np.squeeze(cum_cost_list_carbo), np.log10(loss_list_carbo), label= 'carbo', alpha= 0.5)
+plt.plot(np.squeeze(cum_cost_list_carbo), np.array(loss_list_carbo), label= 'carbo', alpha= 0.5)
+plt.scatter(np.squeeze(cum_cost_list_carbo),np.array(loss_list_carbo), label= 'carbo', alpha= 0.5)
 
-plt.plot(np.squeeze(cum_cost_list_eiw_eipu), np.log10(loss_list_eiw_eipu), label= 'eiw_eipu', alpha= 0.5)
-plt.scatter(np.squeeze(cum_cost_list_eiw_eipu),np.log10(loss_list_eiw_eipu), label= 'eiw_eipu', alpha= 0.5)
+plt.plot(np.squeeze(cum_cost_list_eiw_eipu), np.array(loss_list_eiw_eipu), label= 'eiw_eipu', alpha= 0.5)
+plt.scatter(np.squeeze(cum_cost_list_eiw_eipu),np.array(loss_list_eiw_eipu), label= 'eiw_eipu', alpha= 0.5)
 
 # plt.plot(np.squeeze(cum_cost_list_imco), loss_list_imco, label= 'imco', alpha= 0.5)
 # plt.scatter(np.squeeze(cum_cost_list_imco), loss_list_imco, label= 'imco', alpha= 0.5)
 
 plt.xlabel('cost'); plt.ylabel('loss'); plt.legend()
 plt.show()
+
+#
+# plt.figure()
+#
+# plt.plot(np.squeeze(cum_cost_list_ei_pu), np.log10(loss_list_ei_pu), label= 'ei_pu', alpha= 0.5)
+# plt.scatter(np.squeeze(cum_cost_list_ei_pu), np.log10(loss_list_ei_pu), label= 'ei_pu', alpha= 0.5)
+#
+# plt.plot(np.squeeze(cum_cost_list_ei), np.log10(loss_list_ei), label= 'ei', alpha= 0.5)
+# plt.scatter(np.squeeze(cum_cost_list_ei), np.log10(loss_list_ei), label= 'ei', alpha= 0.5)
+#
+#
+# plt.plot(np.squeeze(cum_cost_list_carbo), np.log10(loss_list_carbo), label= 'carbo', alpha= 0.5)
+# plt.scatter(np.squeeze(cum_cost_list_carbo), np.log10(loss_list_carbo), label= 'carbo', alpha= 0.5)
+#
+# plt.plot(np.squeeze(cum_cost_list_eiw_eipu), np.log10(loss_list_eiw_eipu), label= 'eiw_eipu', alpha= 0.5)
+# plt.scatter(np.squeeze(cum_cost_list_eiw_eipu),np.log10(loss_list_eiw_eipu), label= 'eiw_eipu', alpha= 0.5)
+#
+# # plt.plot(np.squeeze(cum_cost_list_imco), loss_list_imco, label= 'imco', alpha= 0.5)
+# # plt.scatter(np.squeeze(cum_cost_list_imco), loss_list_imco, label= 'imco', alpha= 0.5)
+#
+# plt.xlabel('cost'); plt.ylabel('loss'); plt.legend()
+# plt.show()
 
 
 # plt.figure()

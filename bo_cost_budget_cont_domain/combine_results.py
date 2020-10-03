@@ -24,13 +24,13 @@ def delete_invalid_loss_and_count(loss_and_count_dict):
 
     return new_dict
 
-folder= '01_10_2020/multi_opt_2d'
+folder= '14_09_2020'
 file_dir1= '../Results/'+folder+'/exp1.h5'
 files= [file_dir1]
 
 num_iter1= 7
 methods= ['ei_pu', 'carbo', 'ei',  'imco']
-cost_disc_num= 40
+cost_disc_num= 100
 
 folder= '14_09_2020'
 exp_name= 'exp2'

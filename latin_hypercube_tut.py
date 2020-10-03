@@ -42,3 +42,8 @@ def test_pydoe():
     # plt.scatter(X[:, 0], X[:, 1], color= 'green')
     plt.scatter(X_rand[:, 0], X_rand[:, 1], color= 'red')
     plt.show()
+
+def test_approximation_random():
+    domain= [[0,15], [-5, 3]]
+    X_rand = np.random.uniform(low= [domain[0][0], domain[1][0]], high= [domain[0][1],domain[1][1]], size = (100, 2))
+    grid=

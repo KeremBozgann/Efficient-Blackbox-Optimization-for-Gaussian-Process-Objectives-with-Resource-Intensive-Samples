@@ -149,7 +149,7 @@ grid_ei= False
 budget= 100; total_iterations= 10
 num_init_train_samples= 5
 
-cost_grid= np.linspace(0, 3/2*budget, 20)
+cost_grid= np.linspace(0, budget, 100)
 
 plot_loss_at_each_iteration= False
 

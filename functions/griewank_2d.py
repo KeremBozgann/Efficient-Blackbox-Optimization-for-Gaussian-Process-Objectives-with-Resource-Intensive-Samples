@@ -34,7 +34,7 @@ def griewank_2d_opt():
 
     y_opt= 0.0
     x_opt= [[0.0, 0.0]]
-    domain=  [[-5,5], [-5,5]]
+    domain=  [[-10,10], [-10,10]]
 
     return y_opt, x_opt, domain
 
@@ -57,7 +57,7 @@ def scipy_minimize_griewank_2d():
 
         return result
 
-    domain= [[-5,5], [-5,5]]
+    domain=  [[-10,10], [-10,10]]
 
     lower = [];upper = []
     D = 2
@@ -84,7 +84,7 @@ def griewank_2d_plots(disc, plot= False):
 
 
 
-    domain= [[-5,5], [-5,5]]
+    domain=  [[-10,10], [-10,10]]
     x1 = np.linspace(domain[0][0], domain[0][1], disc)
     x2 = np.linspace(domain[1][0], domain[1][1], disc)
     x1_max, x2_max, x1_min, x2_min = np.max(x1), np.max(x2), np.min(x1), np.min(x2)
