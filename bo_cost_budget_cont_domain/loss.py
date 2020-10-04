@@ -15,8 +15,9 @@ def loss_at_current_step_cont_domain(model, x_true_opt, y_true_opt, domain, xt, 
     def func(x):
         x= x.reshape(1,-1)
         u_x, var_x= model.predict_f(x);
-
-        return u_x.numpy()
+        u_x=u_x.numpy()
+        u_x= u_x.flatten()
+        return u_x
 
     if type(u_X)== np.ndarray:
         index_opt_grid= int(np.argmin(u_X, axis=0));
@@ -42,26 +43,32 @@ def loss_at_current_step_cont_domain(model, x_true_opt, y_true_opt, domain, xt, 
         x_pred_value_list[i, :]= x_pred_value[0, :]
         x_pred_list[i,:]= x_pred[0,:]
 
+
     index_opt_sci= np.argmin(x_pred_value_list, axis=0)
     x_pred_opt_value_sci= x_pred_value_list[index_opt_sci, :].reshape(1,-1)
     x_pred_opt_sci= x_pred_list[index_opt_sci, :].reshape(1, -1)
 
-    '''compare with grid optimum'''
-    if type(u_X)== np.ndarray:
-        if x_pred_opt_value_sci< x_opt_grid_val:
+    if D==1 or D==2:
+        '''compare with grid optimum'''
+        if type(u_X)== np.ndarray:
+            if x_pred_opt_value_sci< x_opt_grid_val:
+                x_pred_opt = x_pred_opt_sci
+
+            else:
+                x_pred_opt = x_grid_opt
+        else:
             x_pred_opt = x_pred_opt_sci
 
-        else:
-            x_pred_opt = x_grid_opt
     else:
-        x_pred_opt = x_pred_opt_sci
+        x_pred_opt=  x_pred_opt_sci
 
     '''Find estimated optimal point from posterior'''
 
     if objective_func!= 'cifar' and objective_func!= 'fashion' and objective_func!= 'fashion2':
         y_pred_opt = objective_func(x_pred_opt)
 
-        print('u_opt_grid:{}, u_opt_sci:{}'.format(x_opt_grid_val, x_pred_opt_value_sci))
+
+        # print('u_opt_grid:{}, u_opt_sci:{}'.format(x_opt_grid_val, x_pred_opt_value_sci))
 
         '''Determine the squared loss for the prediction'''
         print('evaluated point at this round:{}'.format(xt))

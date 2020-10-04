@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import sys
+sys.path.append('../bo_cost_budget_cont_domain')
 from util import create_grid
 
 def plot_posterior(X, y_true, model):

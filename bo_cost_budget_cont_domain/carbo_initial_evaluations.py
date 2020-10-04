@@ -6,6 +6,7 @@ import sys
 sys.path.append('../HPO')
 from keras_model import Keras_model_cifar, Keras_model_fashion, Keras_model_fashion2
 from loss import loss_at_current_step_cont_domain
+
 from util import get_mean_var_std
 from gpflow.utilities import print_summary
 

@@ -3,7 +3,7 @@ import numpy as np
 from scipy.stats import norm
 from scipy.optimize import minimize, Bounds
 import gpflow as gp
-from util import get_mean_var_std, get_mean_and_var_cost, get_one_step_mean_and_variance, dEI1_x2_dx1, get_mean_and_var_cost, \
+from util2 import get_mean_var_std, get_mean_and_var_cost, get_one_step_mean_and_variance, dEI1_x2_dx1, get_mean_and_var_cost, \
                     get_mean_variance_gradients_q1
 
 from ei_opt import Ei_opt

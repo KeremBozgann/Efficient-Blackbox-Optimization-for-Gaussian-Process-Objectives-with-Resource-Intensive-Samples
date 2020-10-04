@@ -21,7 +21,7 @@ from scipy.optimize import minimize
 sys.path.append('../bo_cost_budget_cont_domain')
 from hyperparameter_optimization import logistic_bjt
 
-def griewank_3d(X):
+def griewank_3d_cost(X):
 
     # x1= X[:,0].reshape(-1,1); x2= X[:,1].reshape(-1,1)
     term1 = 0
@@ -33,9 +33,9 @@ def griewank_3d(X):
         term2 *= np.cos(xi / np.sqrt(i + 1))
     result = term1 / 4000 - term2 + 1
 
-    return result
+    return np.exp(-result)
 
-def griewank_3d_opt():
+def griewank_3d_cost_opt():
 
     y_opt= 0.0
     x_opt= [[0.0, 0.0, 0.0]]
@@ -44,7 +44,7 @@ def griewank_3d_opt():
     return y_opt, x_opt, domain
 
 
-def scipy_minimize_griewank_3d():
+def scipy_minimize_griewank_3d_cost():
 
     def fun(x):
         x= x.reshape(1,-1)
@@ -57,7 +57,7 @@ def scipy_minimize_griewank_3d():
             term1 += xi ** 2
             term2 *= np.cos(xi / np.sqrt(i + 1))
         result = term1 / 4000 - term2 + 1
-
+        result= np.exp(-result)
         result= result.flatten()
 
         return result
@@ -85,16 +85,18 @@ def scipy_minimize_griewank_3d():
     print('optimum value:{}, optimum point:{}'.format(value_list[index, :].reshape(-1,1), x_opt_list[index , :].reshape(1,-1)))
 
 
-def griewank_3d_plots(disc):
+def griewank_3d_cost_plots(disc):
+
+
 
     domain=  [[-5,5],[-5,5], [-5,5]]
     X= create_grid(disc, domain)
 
-    Y= griewank_3d(X)
+    Y= griewank_3d_cost(X)
 
     return X, Y
 
-def griewank_3d_find_best_suited_kernel(X, Y, noise=10**(-4)):
+def griewank_3d_cost_find_best_suited_kernel(X, Y, noise=10**(-4)):
 
     '''constraint values'''
     lower= 10**(-5); upper= 10**(6); #lengtscale and variance constarint
@@ -105,8 +107,8 @@ def griewank_3d_find_best_suited_kernel(X, Y, noise=10**(-4)):
 
     D= X.shape[1]
     kernel = gp.kernels.RBF(lengthscales=np.array([1] * D))
-
-    model = gp.models.GPR((X, Y), kernel=kernel)
+    Y_latent= np.log(Y)
+    model = gp.models.GPR((X, Y_latent), kernel=kernel)
     '''set hyperparameter constraints'''
     model.kernel.lengthscales = gp.Parameter(model.kernel.lengthscales.numpy(), transform=logistic)
     model.kernel.variance = gp.Parameter(model.kernel.variance.numpy(), transform=logistic)
