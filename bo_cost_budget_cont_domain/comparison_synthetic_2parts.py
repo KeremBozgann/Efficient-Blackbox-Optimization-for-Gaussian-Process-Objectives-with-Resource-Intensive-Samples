@@ -13,7 +13,8 @@ from p_ei_pu import ei_ppu_bo
 # from ei_pucla_v2 import ei_pucla_v2_bo
 # from CATS import CATS_bo_cont_domain
 from EI_cont_domain import ei_bo
-from importance_cost_EI import imco_ei_bo
+# from importance_cost_EI import imco_ei_bo
+from ei_weighted_ei_pu import eiw_eipu_bo
 
 import sys
 sys.path.append('../')
@@ -33,7 +34,10 @@ from multi_opt_different_cost_2d import *
 # from synthetic_2d_cost import *
 # from synthetic_2d_multi_opt_cost import *
 from synthetic_2parts import *
+from griewank_2d import *
 
+
+from branin_res import *
 '''cost functions'''
 from exp_cos_1d import *
 from exp_cos_2d import *
@@ -43,6 +47,9 @@ from multi_opt_different_cost_2d_cost import *
 # from synthetic_2d import *
 # from synthetic_2d_multi_opt import *
 from synthetic_2parts_cost import *
+from branin_res_cost import *
+from griewank_2d_cost import *
+from cos_hf_2d_cost import *
 
 from keras_model import initial_training_cifar
 from keras_model import initial_training_fashion
@@ -85,12 +92,19 @@ hyper_opt_per= False
 lower = [domain[i][0] for i in range(len(domain))];
 upper = [domain[i][1] for i in range(len(domain))]
 
-'''imco parameters'''
-random_restarts_imco= 10
-num_iter_max_imco= 100
-num_samples_uni_imco= 1000
-num_samples_ei_imco= 10
-grid_imco= False
+'''eiw_eipu'''
+random_restarts_eiw_eipu= 10
+num_iter_max_eiw_eipu= 100
+num_samples_uni_eiw_eipu= 2000
+num_samples_ei_eiw_eipu= 100
+grid_eiw_eipu= False
+
+# '''imco parameters'''
+# random_restarts_imco= 10
+# num_iter_max_imco= 100
+# num_samples_uni_imco= 1000
+# num_samples_ei_imco= 10
+# grid_imco= False
 
 '''ei_pu parameters'''
 random_restarts_ei_pu= 10
@@ -136,7 +150,7 @@ grid_ei= False
 budget= 100; total_iterations= 10
 num_init_train_samples= 5
 
-cost_grid= np.linspace(0, 3/2*budget, 20)
+cost_grid= np.linspace(0, budget, 100)
 
 plot_loss_at_each_iteration= False
 
@@ -148,7 +162,8 @@ count_carbo= np.zeros(cost_grid.shape); loss_carbo= np.zeros(cost_grid.shape); f
 # count_pucla_v2= np.zeros(cost_grid.shape); loss_pucla_v2= np.zeros(cost_grid.shape);
 # count_ppu= np.zeros(cost_grid.shape); loss_ppu= np.zeros(cost_grid.shape); f_best_ppu= np.zeros(cost_grid.shape)
 # count_prox= np.zeros(cost_grid.shape); loss_prox= np.zeros(cost_grid.shape); f_best_prox= np.zeros(cost_grid.shape)
-count_imco= np.zeros(cost_grid.shape); loss_imco= np.zeros(cost_grid.shape); f_best_imco= np.zeros(cost_grid.shape)
+# count_imco= np.zeros(cost_grid.shape); loss_imco= np.zeros(cost_grid.shape); f_best_imco= np.zeros(cost_grid.shape)
+count_eiw_eipu= np.zeros(cost_grid.shape); loss_eiw_eipu= np.zeros(cost_grid.shape); f_best_eiw_eipu= np.zeros(cost_grid.shape)
 
 for i in range(total_iterations):
     print('iteration: ', i)
@@ -166,14 +181,26 @@ for i in range(total_iterations):
         X = None; Y = None; Y_cost = None
         x0 = np.random.uniform(lower, upper, (1, D))
 
-    #
-    # '''ei'''
-    # loss_list_EI, Xt_EI, Yt_EI, model_EI, cost_list_EI, cum_cost_list_EI= EI_bo_cont_domain(input_dimension, output_dimension,
-    #                     cost_dimension, objective_func, y_true_opt, x_true_opt, domain, kernel, budget, x0,
-    #                                 cost_kernel, noise=10**(-4), noise_cost= 10**(-4), plot=False, plot_cost= False)
-    #
-    # loss_ei, count_ei= add_loss(loss_ei, count_ei, loss_list_EI,   np.atleast_1d(np.array(cum_cost_list_EI).squeeze()),
-    #                             cost_grid)
+
+    print('entering eiw_eipu')
+    '''eiw_eipu'''
+    loss_list_eiw_eipu, Xt_eiw_eipu, Yt_eiw_eipu, model_eiw_eipu, cost_list_eiw_eipu, cum_cost_list_eiw_eipu, \
+    latent_cost_model_eiw_eipu, f_best_list_eiw_eipu = \
+        eiw_eipu_bo(D, objective_func, cost_function, y_true_opt, x_true_opt,
+                    domain, kernel, budget, x0, latent_cost_kernel, random_restarts_eiw_eipu, num_iter_max_eiw_eipu,
+                    grid_eiw_eipu,
+                    noise= noise, noise_cost= noise_cost, plot=False, plot_cost=False, num_layer=None,
+                    num_dense=None,
+                    num_epoch= None, X_init=None, Y_init=None, Y_cost_init=None, hyper_opt_per=False, plot_color=False,
+                    num_lthc_samples=num_samples_uni_eiw_eipu, num_ei_samples=num_samples_ei_eiw_eipu,
+                    sampling_method='random', cut_below_avg=False)
+
+    # loss_list_eiw_eipu = np.log10(loss_list_eiw_eipu)
+    loss_eiw_eipu, count_eiw_eipu, f_best_eiw_eipu = add_loss(loss_eiw_eipu, count_eiw_eipu
+                                   ,loss_list_eiw_eipu, np.atleast_1d(np.array(cum_cost_list_eiw_eipu).squeeze()),
+                                                     f_best_list_eiw_eipu, f_best_eiw_eipu, cost_grid)
+
+
 
     print('entering carbo')
     '''carbo'''
@@ -184,24 +211,24 @@ for i in range(total_iterations):
                              num_dense=None, num_epoch= None, hyper_opt_per=False, X_init=None, Y_init=None,
                              Y_cost_init=None)
 
-    loss_list_carbo = np.log10(loss_list_carbo)
+    # loss_list_carbo = np.log10(loss_list_carbo)
     loss_carbo, count_carbo, f_best_carbo = add_loss(loss_carbo, count_carbo
                                    ,loss_list_carbo, np.atleast_1d(np.array(cum_cost_list_carbo).squeeze()),
                                                      f_best_list_carbo, f_best_carbo, cost_grid)
-
-    print('entering imco')
-    '''imco'''
-    loss_list_imco, Xt_imco, Yt_imco, model_imco, cost_list_imco, cum_cost_list_imco, latent_cost_model_imco, f_best_list_imco = \
-        imco_ei_bo(D, objective_func, cost_function, y_true_opt, x_true_opt,
-                   domain, kernel, budget, x0, latent_cost_kernel, random_restarts_imco, num_iter_max_imco, grid_imco,
-                   noise=noise, noise_cost=noise_cost, plot=False, plot_cost=False, num_layer=None, num_dense=None,
-                   num_epoch=None, X_init=None, Y_init=None, Y_cost_init=None, hyper_opt_per=False, plot_color=False,
-                   num_samples_uni=num_samples_uni_imco, num_samples_ei=num_samples_ei_imco)
-
-    loss_list_imco = np.log10(loss_list_imco)
-    loss_imco, count_imco, f_best_imco = add_loss(loss_imco, count_imco
-                                   ,loss_list_imco, np.atleast_1d(np.array(cum_cost_list_imco).squeeze()),
-                                                     f_best_list_imco, f_best_imco, cost_grid)
+    #
+    # print('entering imco')
+    # '''imco'''
+    # loss_list_imco, Xt_imco, Yt_imco, model_imco, cost_list_imco, cum_cost_list_imco, latent_cost_model_imco, f_best_list_imco = \
+    #     imco_ei_bo(D, objective_func, cost_function, y_true_opt, x_true_opt,
+    #                domain, kernel, budget, x0, latent_cost_kernel, random_restarts_imco, num_iter_max_imco, grid_imco,
+    #                noise=noise, noise_cost=noise_cost, plot=False, plot_cost=False, num_layer=None, num_dense=None,
+    #                num_epoch=None, X_init=None, Y_init=None, Y_cost_init=None, hyper_opt_per=False, plot_color=False,
+    #                num_samples_uni=num_samples_uni_imco, num_samples_ei=num_samples_ei_imco)
+    #
+    # loss_list_imco = np.log10(loss_list_imco)
+    # loss_imco, count_imco, f_best_imco = add_loss(loss_imco, count_imco
+    #                                ,loss_list_imco, np.atleast_1d(np.array(cum_cost_list_imco).squeeze()),
+    #                                                  f_best_list_imco, f_best_imco, cost_grid)
 
 
 
@@ -271,7 +298,7 @@ for i in range(total_iterations):
                              noise= noise, noise_cost= noise_cost, plot=False, plot_cost=False, num_layer=num_layer,
                              num_dense= num_dense, X_init=X, Y_init=Y, Y_cost_init=Y_cost, hyper_opt_per=hyper_opt_per, plot_color= False)
 
-    loss_list_ei_pu= np.log10(loss_list_ei_pu)
+    # loss_list_ei_pu= np.log10(loss_list_ei_pu)
     loss_ei_pu, count_ei_pu, f_best_pu = add_loss(loss_ei_pu, count_ei_pu
                                    ,loss_list_ei_pu, np.atleast_1d(np.array(cum_cost_list_ei_pu).squeeze()),
                                                   f_best_list_pu, f_best_pu, cost_grid)
@@ -284,7 +311,7 @@ for i in range(total_iterations):
               noise_cost=noise_cost, num_iter_max= num_iter_max_ei, plot=False, plot_cost=False, num_layer=num_layer,
               num_dense= num_dense, X_init=X, Y_init=Y, Y_cost_init=Y_cost, hyper_opt_per=hyper_opt_per)
 
-    loss_list_ei = np.log10(loss_list_ei)
+    # loss_list_ei = np.log10(loss_list_ei)
     loss_ei, count_ei, f_best_ei = add_loss(loss_ei, count_ei
                                        , loss_list_ei, np.atleast_1d(np.array(cum_cost_list_ei).squeeze()), f_best_list_ei,
                                       f_best_ei, cost_grid)
@@ -302,7 +329,7 @@ for i in range(total_iterations):
     loss_and_count_dict = {'ei_pu': [loss_ei_pu, count_ei_pu, cost_grid, f_best_pu],
                            'carbo': [loss_carbo, count_carbo, cost_grid, f_best_carbo],
                             'ei': [loss_ei, count_ei, cost_grid, f_best_ei],
-                            'imco': [loss_imco, count_imco, cost_grid, f_best_imco],
+                            'eiw_eipu': [loss_eiw_eipu, count_eiw_eipu, cost_grid, f_best_eiw_eipu],
                            }
 
     save_to_hf(loss_and_count_dict, folder, hf_name, i)
@@ -329,7 +356,7 @@ for i in range(total_iterations):
 loss_and_count_dict= {'ei_pu':[loss_ei_pu, count_ei_pu, cost_grid, f_best_pu],
                       'carbo':[loss_carbo, count_carbo, cost_grid, f_best_carbo],
                          'ei': [loss_ei, count_ei, cost_grid, f_best_ei],
-                         'imco': [loss_imco, count_imco, cost_grid, f_best_imco],
+                         'eiw_eipu': [loss_eiw_eipu, count_eiw_eipu, cost_grid, f_best_eiw_eipu],
                     }
 
 
@@ -348,8 +375,9 @@ parameter_dict= {'ei_pu':
         {'random_restarts':random_restarts_carbo, 'num_iter_max':num_iter_max_carbo, 'grid':grid_carbo},
                  'ei':
          {'random_restarts': random_restarts_ei, 'num_iter_max': num_iter_max_ei, 'grid': grid_ei},
-                 'imco':
-         {'random_restarts': random_restarts_imco, 'num_iter_max': num_iter_max_imco, 'grid': grid_imco},
+                 'eiw_eipu':
+         {'random_restarts': random_restarts_eiw_eipu, 'num_iter_max': num_iter_max_eiw_eipu, 'grid': grid_eiw_eipu,
+          'num_samples':num_samples_uni_eiw_eipu, 'num_ei_samples':num_samples_ei_eiw_eipu},
 
                      }
                  # 'pucla_v2':
