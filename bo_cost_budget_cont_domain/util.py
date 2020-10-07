@@ -1,6 +1,24 @@
 import numpy as np
 from scipy.stats import norm
 
+
+def uniformly_choose_from_domain(domain, num_samples):
+    X= np.empty([num_samples, len(domain)])
+    # Y= np.empty([num_samples, 1])
+
+    for i in range(len(domain)):
+        xi= np.random.uniform(domain[i][0], domain[i][1], (num_samples,1))
+        X[:, i]= xi[:,0]
+    return X
+
+def initial_training_synthetic(domain ,num_samples, objective_func, cost_func):
+
+    X= uniformly_choose_from_domain(domain, num_samples)
+    Y= objective_func(X)
+    Y_cost= cost_func(X)
+
+    return X, Y, Y_cost
+
 def get_grid(domain, disc):
 
     x_list = []

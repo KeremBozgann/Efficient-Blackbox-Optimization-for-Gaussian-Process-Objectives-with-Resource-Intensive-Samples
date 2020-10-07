@@ -111,7 +111,7 @@ class Keras_model_fashion2():
         xt_eval[0, 0]= np.log2(layer_size)
         xt_eval[0, 1]= num_layers
         # xt_eval[0,len(filter_sizes):len(filter_sizes)+ len(dense_sizes)]= np.log2(dense_sizes[:])
-        xt_eval[0,1]= np.log10(alpha)
+        xt_eval[0,2]= np.log10(alpha)
         # xt_eval[0,2]= np.log10(l2_regul)
 
         print('layer_sizes:{}\nnum_layers:{}\nalpha:{}\nnum_epoch:{}'.format(layer_size, num_layers, alpha,
@@ -443,6 +443,44 @@ def find_best_suited_gp_kernels(X, Y, Y_cost, noise, noise_cost):
     print_summary(latent_cost_model)
 
     return kernel, latent_kernel
+
+import sys
+sys.path.append('../bo_cost_budget_cont_domain')
+from util import *
+import h5py
+def grid_search_fashion():
+    keras_model = Keras_model_fashion2()
+    disc= 21
+    domain= get_fashion2_domain()
+
+    '''create grid'''
+    x_list= []
+    x_layer_size= np.linspace(1, 8, 8)
+    x_width = np.linspace(0, 8.0, 21)
+    x_list.append(x_layer_size); x_list.append(x_width)
+    X_temp = np.meshgrid(*x_list)
+    X_grid = np.empty([8*21,2])
+    for i in range(2):
+        X_grid[:, i] = X_temp[i].flatten()
+
+    '''evaluate'''
+    loss_list= np.empty([8*21, 1])
+    X_eval=  np.empty([8*21, 3])
+    cost_list=  np.empty([8*21, 1])
+
+    for i in range(X_grid.shape[0]):
+        xi = X_grid[i, :].reshape(1,-1)
+        layer_size= xi[0, 0]; num_layers= xi[0, 1]
+        alpha= -4
+        test_lossi, time_costi, x_evali= keras_model.evaluate_error_and_cost(layer_size, num_layers, alpha, 1.7)
+        loss_list[i, 0]= test_lossi
+        cost_list[i, 0]= time_costi
+        X_eval[i, :]= x_evali[0, :]
+    with h5py.File('./keras_results/'+'fashion_grid.h5', 'a') as hf:
+
+        hf.create_dataset('X_eval', data= X_eval)
+        hf.create_dataset('loss_list', data= loss_list)
+        hf.create_dataset('cost list', data= cost_list)
 
 def test_model_fashion():
     fashion_mnist = keras.datasets.fashion_mnist

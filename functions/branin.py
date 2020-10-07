@@ -1,19 +1,18 @@
 import numpy as np
-import math
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
-import math
 import gpflow as gp
 from gpflow.utilities import print_summary
 import sys
 sys.path.append('../bo_cost_budget_cont_domain')
+from scipy.optimize import minimize, Bounds
 from hyperparameter_optimization import logistic_bjt
 
 def branin(X):
 
     x1= X[:,0].reshape(-1,1); x2= X[:,1].reshape(-1,1)
-    result = np.square(x2 - (5.1 / (4 * np.square(math.pi))) * np.square(x1) +
-                       (5 / math.pi) * x1 - 6) + 10 * (1 - (1. / (8 * math.pi))) * np.cos(x1) + 10
+    result = np.square(x2 - (5.1 / (4 * np.square(np.pi))) * np.square(x1) +
+                       (5 / np.pi) * x1 - 6) + 10 * (1 - (1. / (8 * np.pi))) * np.cos(x1) + 10
 
     # result = float(result)
 
@@ -28,6 +27,42 @@ def branin_opt():
     domain= [[-5,10], [0,15]]
 
     return y_opt, x_opt, domain
+
+
+def scipy_minimize_branin():
+
+    def fun(x):
+        x= x.reshape(1,-1)
+        x1 = x[:, 0].reshape(-1, 1);
+        x2 = x[:, 1].reshape(-1, 1)
+        result = np.square(x2 - (5.1 / (4 * np.square(np.pi))) * np.square(x1) +
+                           (5 / np.pi) * x1 - 6) + 10 * (1 - (1. / (8 * np.pi))) * np.cos(x1) + 10
+        result= result.flatten()
+        return result
+
+    domain= [[-5,10], [0,15]]
+
+    lower = [];upper = []
+    D = 2
+
+    for i in range(len(domain)):
+        lower.append(domain[i][0]); upper.append(domain[i][1])
+    b = Bounds(lb=lower, ub=upper)
+
+    x_opt_list= np.empty([100, 2])
+    value_list= np.empty([100, 1])
+
+    for i in range(100):
+
+        x0 = np.random.uniform(lower, upper, (1, D))
+        result= minimize(fun= fun, bounds= b, x0= x0, method= 'L-BFGS-B')
+        # print('optimum point:{}, optimum value:{}'.format(result['x'], result['fun']))
+        x_opt_list[i, :] = result['x'].reshape(1,-1)
+        value_list[i, :]= result['fun'].reshape(1,-1)
+    index= np.argmin(value_list, axis=0)
+    print('optimum value:{}, optimum point:{}'.format(value_list[index, :].reshape(-1,1), x_opt_list[index , :].reshape(1,-1)))
+
+
 
 def branin_plots(disc, plot= False):
 

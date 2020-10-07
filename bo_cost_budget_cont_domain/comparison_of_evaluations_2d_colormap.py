@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from plots import plot_colormaps
+from plots import plot_colormaps, plot_contour
 from EI_pu_cont_domain import EI_pu_bo_cont_domain
 from carbo import carbo_bo_cont_domain
 from EI_cont_domain import ei_bo
@@ -176,7 +176,7 @@ plt.show()
 #
 # plt.xlabel('cost'); plt.ylabel('loss'); plt.legend()
 # plt.show()
-
+plot_contour_and_save(func, domain, disc, name= 'synthetic_multi_2d_cost')
 plot_colormaps(Xt_carbo, disc, objective_func, cost_function, domain, 'carbo')
 plot_colormaps(Xt_ei, disc, objective_func, cost_function, domain, 'ei')
 plot_colormaps(Xt_ei_pu, disc, objective_func, cost_function, domain, 'ei_pu')

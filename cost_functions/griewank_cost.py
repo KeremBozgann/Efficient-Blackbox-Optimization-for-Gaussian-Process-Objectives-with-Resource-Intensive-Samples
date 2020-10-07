@@ -6,8 +6,13 @@ import math
 import gpflow as gp
 from gpflow.utilities import print_summary
 import sys
+
+
+
+
 sys.path.append('../bo_cost_budget_cont_domain')
 from hyperparameter_optimization import logistic_bjt
+from util import create_grid
 
 import sys
 from scipy.optimize import Bounds
@@ -16,55 +21,56 @@ from scipy.optimize import minimize
 sys.path.append('../bo_cost_budget_cont_domain')
 from hyperparameter_optimization import logistic_bjt
 
-def branin_res_cost(X):
+def griewank_cost(X):
 
-    x1= X[:,0].reshape(-1,1); x2= X[:,1].reshape(-1,1)
+    # x1= X[:,0].reshape(-1,1); x2= X[:,1].reshape(-1,1)
+    term1 = 0
+    term2 = 1
 
-    x1_res = 15 * x1 - 5;x2_res = 15 * x2
-    res= 1/51.95
-    result = res*(np.square(x2_res - (5.1 / (4 * np.square(math.pi))) * np.square(x1_res) +
-                       (5 / math.pi) * x1_res - 6) + 10 * (1 - (1. / (8 * math.pi))) * np.cos(x1_res) -44.81)
+    for i in range(X.shape[1]):
+        xi = X[:, i].reshape(-1, 1)
+        term1 += xi ** 2
+        term2 *= np.cos(xi / np.sqrt(i + 1))
+    result = term1 / 4000 - term2 + 1
 
-    # result = float(result)
+    return np.exp(-result)
 
-    # print('Result = %f' % result)
-    # time.sleep(np.random.randint(60))
-    return np.exp(-result)+0.5
+def griewank_cost_opt(D):
 
-def branin_res_cost_opt():
-
-    y_opt= -1.04739389
-    x_opt= [[0.12389382, 0.81833334], [0.96165187, 0.165], [0.54277284, 0.15166667]]
-    domain= [[0,1], [0,1]]
+    y_opt= 0.0
+    x_opt= [[0.0]]*D
+    domain=  [[-5,5]]*D
 
     return y_opt, x_opt, domain
 
 
-def scipy_minimize_branin_res_cost():
+def scipy_minimize_griewank_cost(D):
 
     def fun(x):
         x= x.reshape(1,-1)
-        x1 = x[:, 0].reshape(-1, 1);
-        x2 = x[:, 1].reshape(-1, 1)
 
-        x1_res = 15 * x1 - 5;
-        x2_res = 15 * x2
-        res = 1 / 51.95
-        result = res * (np.square(x2_res - (5.1 / (4 * np.square(math.pi))) * np.square(x1_res) +
-                                  (5 / math.pi) * x1_res - 6) + 10 * (1 - (1. / (8 * math.pi))) * np.cos(x1_res) - 44.81)
+        term1 = 0
+        term2 = 1
 
-        return -np.exp(-result)+0.5
+        for i in range(x.shape[1]):
+            xi = x[:, i].reshape(-1, 1)
+            term1 += xi ** 2
+            term2 *= np.cos(xi / np.sqrt(i + 1))
+        result = term1 / 4000 - term2 + 1
+        result= np.exp(-result)
+        result= result.flatten()
 
-    domain= [[0,1], [0,1]]
+        return -result
+
+    domain=  [[-5,5]]*D
 
     lower = [];upper = []
-    D = 2
 
     for i in range(len(domain)):
         lower.append(domain[i][0]); upper.append(domain[i][1])
     b = Bounds(lb=lower, ub=upper)
 
-    x_opt_list= np.empty([100, 2])
+    x_opt_list= np.empty([100, D])
     value_list= np.empty([100, 1])
 
     for i in range(100):
@@ -78,31 +84,16 @@ def scipy_minimize_branin_res_cost():
     print('optimum value:{}, optimum point:{}'.format(value_list[index, :].reshape(-1,1), x_opt_list[index , :].reshape(1,-1)))
 
 
-def branin_res_cost_plots(disc, plot= False):
+def griewank_cost_plots(disc, D):
 
+    domain=  [[-5,5]]*D
+    X= create_grid(disc, domain)
 
+    Y= griewank_cost(X)
 
-    domain= [[0,1], [0,1]]
-    x1 = np.linspace(domain[0][0], domain[0][1], disc)
-    x2 = np.linspace(domain[1][0], domain[1][1], disc)
-    x1_max, x2_max, x1_min, x2_min = np.max(x1), np.max(x2), np.min(x1), np.min(x2)
-    X1, X2 = np.meshgrid(x1, x2);
-
-    X1_flat, X2_flat = X1.flatten(), X2.flatten();
-    X1_flat, X2_flat = X1_flat.reshape(-1, 1), X2_flat.reshape(-1, 1)
-    X = np.append(X1_flat, X2_flat, axis=1)
-
-    Y= branin_res_cost(X)
-
-    if plot:
-        fig = plt.figure()
-        ax = Axes3D(fig)
-        ax.set_title('branin')
-        ax.scatter3D(X[:,0], X[:,1], Y[:,0], color= 'blue', label= 'posterior target')
-        plt.show()
     return X, Y
 
-def branin_res_cost_find_best_suited_kernel(X, Y, noise=10**(-4)):
+def griewank_cost_find_best_suited_kernel(X, Y, noise=10**(-4)):
 
     '''constraint values'''
     lower= 10**(-5); upper= 10**(6); #lengtscale and variance constarint
@@ -113,8 +104,8 @@ def branin_res_cost_find_best_suited_kernel(X, Y, noise=10**(-4)):
 
     D= X.shape[1]
     kernel = gp.kernels.RBF(lengthscales=np.array([1] * D))
-    Y_lat=np.log(Y)
-    model = gp.models.GPR((X, Y_lat), kernel=kernel)
+    Y_latent= np.log(Y)
+    model = gp.models.GPR((X, Y_latent), kernel=kernel)
     '''set hyperparameter constraints'''
     model.kernel.lengthscales = gp.Parameter(model.kernel.lengthscales.numpy(), transform=logistic)
     model.kernel.variance = gp.Parameter(model.kernel.variance.numpy(), transform=logistic)

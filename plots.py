@@ -271,16 +271,23 @@ def plot_average_loss(loss_dict):
     plt.show()
 
 
-def plot_and_save_average_loss(loss_dict, folder, exp_name):
+def plot_and_save_average_loss_and_std(loss_dict, folder, exp_name):
 
     plt.figure()
     for method in loss_dict:
+        '''get mean'''
         loss = loss_dict[method][0]; count= loss_dict[method][1]
         cost_grid= loss_dict[method][2]
-
         avg_loss= loss/count
-        plt.plot(cost_grid,avg_loss, label= method, alpha= 0.6)
-        plt.scatter(cost_grid, avg_loss, alpha= 0.6)
+
+        '''get std'''
+        std = loss_dict[method][6]
+
+        # plt.plot(cost_grid,avg_loss, label= method, alpha= 0.6)
+        plt.scatter(cost_grid, np.log10(avg_loss), alpha= 0.6)
+        plt.errorbar(cost_grid, np.log10(avg_loss), yerr= std, linestyle='-', elinewidth=1
+                   ,linewidth=2, label=method,  alpha= 0.6)
+
     plt.xlabel('cost')
     plt.ylabel('loss')
     plt.legend()
@@ -651,3 +658,34 @@ def plot_evaluation_arrows_1d(Xt, Yt, disc, objective_func, cost_function, domai
     # plt.xlabel('x');
     # plt.ylabel('y')
     # plt.show()
+
+def plot_contour_and_save(objective_func, domain, disc, name):
+    d1= 0.01; d2= 0.01
+    X = np.arange(domain[0][0], domain[0][1], d1)
+    n1= int((domain[0][1]- domain[0][0])/d1)
+    Y = np.arange(domain[1][0], domain[1][1], d2)
+    n2 = int((domain[1][1] - domain[1][0]) / d2)
+
+    X1_grid, X2_grid = np.meshgrid(X, Y)
+    X1_grid_flat, X2_grid_flat= (X1_grid.flatten()).reshape(-1,1), (X2_grid.flatten()).reshape(-1,1)
+    X= np.append(X1_grid_flat, X2_grid_flat, axis=1)
+
+    Y = objective_func(X)
+    Y= Y.reshape(n1,n2)
+
+    fig = plt.figure()
+    ax = plt.axes(projection='3d')
+
+    print(X.shape)
+    ax.contour3D(X1_grid, X2_grid, Y, 50, cmap='binary')
+
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('value');
+    plt.rcParams['pdf.fonttype'] = 42
+    plt.rcParams['font.family'] = 'Calibri'
+    # plt.legend()
+
+    plt.savefig('../Results/'+name+'.pdf', dpi=400)
+    # plt.show()
+

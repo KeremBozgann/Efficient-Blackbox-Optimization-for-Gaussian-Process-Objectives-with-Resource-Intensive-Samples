@@ -40,7 +40,7 @@ def ackley_cost_opt(D):
 
     y_opt= 0.0
     x_opt= np.zeros([1, D])
-    domain=  [[-10,10]]*D
+    domain=  [[-5,5]]*D
 
     return y_opt, x_opt, domain
 
@@ -68,7 +68,8 @@ def scipy_minimize_ackley_cost(D):
 
         return result
 
-    domain=  [[-10,10]]*D
+    domain=  [[-5,5]]*D
+
 
     lower = [];upper = []
 
@@ -92,7 +93,8 @@ def scipy_minimize_ackley_cost(D):
 
 def ackley_cost_plots(disc, D, plot= False):
 
-    domain=  [[-10,10]]*D
+    domain=  [[-5,5]]*D
+
     if D==1:
         X_grid = get_grid(domain, disc)
 
